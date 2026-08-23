@@ -1,21 +1,184 @@
-MIT License
+Source Available Non-Commercial License
+=======================================
 
 Copyright (c) 2026 Pablo Agudo Brun
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Project: my-fit-track
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This is a proprietary Source Available / Non-Commercial license.
+This license is NOT an Open Source license as defined by the Open Source
+Initiative (OSI). The Software is made available for viewing, study, and
+non-commercial use only. All commercial rights are reserved exclusively
+by the Copyright Holder.
+
+
+1. Definitions
+--------------
+
+"Copyright Holder" means Pablo Agudo Brun, or any successor owner of the
+copyright in the Software.
+
+"Software" means the source code, object code, documentation, assets, and
+other materials in this repository (including any portion thereof), and any
+modified versions or derivative works based on them.
+
+"You" means any individual or legal entity exercising permissions under
+this license.
+
+"Non-Commercial Use" means use solely for personal, educational, academic,
+or research purposes, without any direct or indirect commercial advantage,
+monetary compensation, or revenue generation.
+
+"Commercial Use" means any use that is primarily intended for, or directed
+toward, commercial advantage, monetary compensation, or revenue generation,
+including without limitation: selling the Software; incorporating the
+Software into commercial products or services; offering paid products or
+services; operating monetized SaaS, web, or mobile applications; and any
+use involving advertising, subscriptions, licensing fees, affiliate
+commissions, commercial donations, sponsorships, or other monetization.
+
+
+2. Grant of License (Non-Commercial Only)
+-----------------------------------------
+
+Subject to the terms of this license, the Copyright Holder grants You a
+worldwide, royalty-free, non-exclusive, non-transferable, revocable license
+to do the following, solely for Non-Commercial Use:
+
+  (a) view, consult, and study the Software;
+  (b) clone or download the repository;
+  (c) run and execute the Software;
+  (d) modify the Software;
+  (e) create forks of the repository; and
+  (f) share, redistribute, or publish the Software and Your modifications,
+      provided that:
+        (i)  You include a complete copy of this license;
+        (ii) You retain all copyright, license, and attribution notices; and
+        (iii) You distribute the Software under this same license and no other.
+
+No other rights are granted, whether by implication, estoppel, or otherwise.
+
+
+3. Commercial Use Prohibited
+----------------------------
+
+You may NOT, without prior express written authorization from the Copyright
+Holder:
+
+  (a) use the Software for any Commercial Use;
+  (b) sell, license for a fee, rent, lease, or otherwise commercially
+      exploit the Software or any derivative work;
+  (c) incorporate the Software, in whole or in part, into any commercial
+      product;
+  (d) incorporate the Software, in whole or in part, into any commercial
+      service;
+  (e) use the Software in any monetized Software-as-a-Service (SaaS),
+      hosted service, or web application;
+  (f) use the Software in any monetized mobile application;
+  (g) use the Software in any paid service or offering;
+  (h) use the Software to generate revenue, directly or indirectly,
+      including through advertising, subscriptions, paid licenses,
+      affiliate marketing, commercial donations, sponsorships, or any
+      other monetization mechanism;
+  (i) redistribute the Software under any license that permits Commercial
+      Use, or under any Open Source or other license terms different from
+      this license; or
+  (j) remove, obscure, or alter any copyright, license, or proprietary
+      notices contained in the Software.
+
+
+4. Reservation of Commercial Rights
+-----------------------------------
+
+All commercial rights in and to the Software are exclusively reserved by
+the Copyright Holder. The Copyright Holder retains the sole and exclusive
+right to commercialize, license commercially, sell, or otherwise exploit
+the Software for Commercial Use.
+
+Any exception allowing Commercial Use requires prior express written
+authorization from the Copyright Holder. No oral statement, conduct, or
+implied permission shall constitute such authorization.
+
+
+5. Trademarks and Other Intellectual Property
+---------------------------------------------
+
+This license does not grant, and shall not be construed as granting, any
+rights in or to any trademark, trade name, logo, trade dress, design,
+patent, or any other intellectual property right of the Copyright Holder,
+other than the limited copyright permissions expressly set forth herein
+as necessary to use the Software under this license.
+
+The name, logo, branding, and trademarks associated with the project
+(including "my-fit-track") remain the exclusive property of the Copyright
+Holder and may not be used to create a derived commercial identity, brand,
+or product without prior express written authorization.
+
+
+6. Attribution and License Continuity
+-------------------------------------
+
+Any copy, fork, modification, or redistribution of the Software must:
+
+  (a) retain the original copyright notice;
+  (b) include this license text in full; and
+  (c) clearly indicate that modifications (if any) have been made,
+      without implying endorsement by the Copyright Holder.
+
+
+7. Termination
+--------------
+
+This license terminates automatically if You breach any of its terms.
+Upon termination, You must cease all use, copying, modification, and
+distribution of the Software, and destroy or permanently delete any
+copies in Your possession or control, except as required by law.
+
+Sections 3, 4, 5, 8, 9, and 10 survive termination.
+
+
+8. Disclaimer of Warranty
+-------------------------
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. THE ENTIRE
+RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH YOU.
+
+
+9. Limitation of Liability
+--------------------------
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE
+COPYRIGHT HOLDER OR AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
+OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE, INCLUDING WITHOUT LIMITATION
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+DAMAGES, OR LOSS OF DATA, PROFITS, OR BUSINESS OPPORTUNITY, EVEN IF ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+
+
+10. Governing Law and Interpretation
+------------------------------------
+
+This license shall be interpreted in accordance with the copyright and
+contract laws applicable to the Copyright Holder, without regard to conflict
+of law principles. If any provision of this license is held unenforceable,
+the remaining provisions shall continue in full force and effect.
+
+Nothing in this license shall be construed as a waiver of any rights of the
+Copyright Holder that are not expressly granted herein.
+
+
+11. Entire Agreement
+--------------------
+
+This license constitutes the entire agreement between You and the Copyright
+Holder with respect to the Software under these terms, and supersedes any
+prior or contemporaneous understandings regarding non-commercial access to
+the Software. Commercial arrangements, if any, must be set out in a separate
+written agreement signed by the Copyright Holder.
+
+
+END OF LICENSE
