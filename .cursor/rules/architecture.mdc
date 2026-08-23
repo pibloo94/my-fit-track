@@ -1,0 +1,49 @@
+---
+description: Core architectural rules for My Fit Tracker. Non-negotiable boundaries and conventions.
+alwaysApply: true
+---
+
+# Architectural rules
+
+Full reasoning: `docs/ARCHITECTURE.md` and `docs/ADR/`. Do not violate these without an ADR.
+
+## Boundaries
+
+- Nothing in `apps/` imports from another entry in `apps/`. Shared code goes to `packages/`.
+- A feature never imports from another feature. Shared UI goes to `shared/`, shared behaviour to
+  `core/`, cross-feature interaction happens via routing or a `core` service.
+- `core/` and `shared/` never import from `features/`.
+- `domain/` never imports from `infrastructure/`, `data-access/`, Prisma, HTTP or a framework.
+- `packages/contracts` depends only on Zod. Never Angular, NestJS or Prisma.
+
+## Types and contracts
+
+- Every request and response shape is a Zod schema in `packages/contracts`. Never hand-write a
+  duplicate interface on either side.
+- Prisma models are never returned from the API and never used as frontend types. Map explicitly.
+- No `any`. Use `unknown` plus narrowing. A justified `any` needs a comment saying why.
+- No non-null assertions (`!`) to silence the compiler; handle the absent case.
+
+## Domain conventions
+
+These prevent specific, expensive bugs. See `docs/ADR/ADR-014-domain-model-conventions.md`.
+
+- **Plan and performance are separate.** `Routine*` is prescription, `WorkoutSession`/`SetEntry` is
+  execution. Never one entity with an `isTemplate` flag.
+- **Historical rows store snapshots.** A diary entry stores its computed macros, not only a food
+  reference.
+- **Storage units are SI** (`weight_kg`, `duration_seconds`). Convert only in frontend mappers.
+- **A workout or diary date is a local calendar `DATE`**, never a UTC timestamp.
+- **Every user-owned query filters on `user_id` in the predicate**, never by loading and comparing
+  afterwards. Repository methods take the user id as a required parameter.
+- Derived values (personal records, weekly volume) are computed, never stored.
+
+## General
+
+- No business logic in components or controllers; they delegate.
+- No HTTP calls from components; use the feature's `data-access` service.
+- Prefer composition over inheritance. No base classes for stores or services.
+- Small functions, one responsibility. Split a service before it passes ~200 lines.
+- No barrel files that re-export a whole feature; they create cycles and defeat tree-shaking.
+  Import from the specific path.
+- Never introduce a dependency without saying what problem it solves and what it replaces.

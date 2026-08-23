@@ -1,0 +1,45 @@
+---
+description: Testing conventions - Vitest, Testcontainers, Testing Library, Playwright
+globs: **/*.spec.ts,**/*.test.ts,**/*.e2e.ts
+alwaysApply: false
+---
+
+# Testing conventions
+
+See `docs/ADR/ADR-012-testing-strategy.md`. The goal is a small suite that fails only for real
+reasons, because a slow brittle suite gets disabled rather than fixed.
+
+## Where each kind of test goes
+
+- **Unit (Vitest, no I/O)**: domain calculations, Zod schemas, mappers, signal stores. Expected to
+  be thorough — this is where a wrong answer is silent.
+- **Component (TestBed + Testing Library)**: assert on rendered output and user interaction, never
+  on component fields or by calling methods directly. `HttpTestingController` for `data-access`.
+- **Integration (Vitest + Testcontainers, real PostgreSQL)**: controllers through to the database,
+  exercising authorization, validation, transactions and constraints together. This tier carries
+  most of the effort.
+- **E2E (Playwright)**: only the four critical journeys. Adding one needs a reason.
+
+## Rules
+
+- **Never mock Prisma.** A test asserting `prisma.x.create` was called passes when the query is
+  wrong, the constraint is missing and the ownership filter was forgotten.
+- **Every endpoint gets an unauthorized-access test**, not just a success case. The missing ownership
+  filter is the most likely and most damaging bug in this codebase.
+- Raw `$queryRaw` queries always get an integration test.
+- Test data comes from builder helpers with sensible defaults, so a test states only what it cares
+  about. Avoid large shared fixtures — they become a coupling point.
+- Timezone and unit conversion need explicit tests, including entries near local midnight and a user
+  who changes timezone.
+- The offline outbox needs tests for its failure modes: retry after timeout, duplicate suppression
+  via idempotency key, logout with a pending queue, orphaned entry after parent deletion.
+
+```typescript
+// BAD - verifies that the code calls the code it calls
+expect(prisma.setEntry.create).toHaveBeenCalledWith({ data: { reps: 8 } });
+
+// GOOD - verifies the observable outcome against a real database
+const created = await request(app).post(`/api/v1/workout-sessions/${id}/set-entries`)
+  .set('Authorization', `Bearer ${token}`).send({ reps: 8, weightKg: 80 }).expect(201);
+expect(await repo.findById(created.body.id, otherUserId)).toBeNull();
+```

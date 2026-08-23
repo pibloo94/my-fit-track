@@ -1,0 +1,58 @@
+---
+description: NestJS conventions for apps/api - layering, validation, authorization, API shape
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+# NestJS API conventions
+
+Baseline: NestJS 11 on Fastify, modular monolith. See `docs/ADR/ADR-002-backend-framework.md` and
+`docs/ADR/ADR-003-api-style.md`.
+
+## Layering, applied selectively
+
+- Simple modules: `controller → service → Prisma`. Do not add layers to a module whose logic is
+  "store this row for this user".
+- Modules with real logic (`sessions`, `nutrition`, `auth`): `api/ → application/ → domain/`, with
+  `infrastructure/` injected through interfaces declared in `domain/`.
+- `domain/` imports nothing from `@nestjs/*`, Prisma or HTTP. That is what makes it testable without
+  a Nest harness.
+- Ports only where there is a real second implementation: `FoodCatalogueProvider`,
+  `IdentityProvider`, `MailSender`. Do not wrap Prisma in an interface for a module with no domain
+  logic.
+
+## Authorization
+
+```typescript
+// BAD - leaks existence, easy to forget on the next endpoint
+const session = await this.prisma.workoutSession.findUnique({ where: { id } });
+if (session.userId !== userId) throw new ForbiddenException();
+
+// GOOD - ownership in the predicate; missing row is the safe failure
+const session = await this.prisma.workoutSession.findFirst({ where: { id, userId } });
+if (!session) throw new NotFoundException();
+```
+
+- Return `404`, not `403`, for another user's resource.
+- Every entitlement-gated capability is checked server-side, via `@RequiresEntitlement`.
+
+## API shape
+
+- Validate every body, query and path param against the `packages/contracts` Zod schema at the
+  controller boundary, rejecting unknown properties. Nothing downstream re-validates.
+- Resource names: `/exercises` (catalogue), `/routines` (plan), `/workout-sessions` (performed),
+  `/set-entries`. **Never `/workouts`** — it is ambiguous.
+- Nesting stops at two levels. Once a resource has an id, address it at the top level.
+- Errors are RFC 9457 `application/problem+json` from the global exception filter, with a stable
+  machine-readable `code` and a `traceId`. Never throw a raw string.
+- Cursor pagination on unbounded collections. Offset only for small bounded lists.
+- Mutations honour `Idempotency-Key`.
+- Filtering and sorting use per-endpoint allow-lists, never a generic query language over columns.
+
+## Data access
+
+- Analytical SQL uses `$queryRaw` with explicit result types, only inside repository classes, always
+  covered by an integration test — a typo in raw SQL is invisible to the type checker.
+- Domain entities are not Prisma models; repositories map between them.
+- Cross-context reactions use the in-process event emitter, not a direct service import.
+- Never log passwords, tokens or personal data.

@@ -1,28 +1,49 @@
-# Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
+# Patterns are relative (no leading slash) so they apply inside apps/* and packages/* too.
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+out-tsc/
+tmp/
 .angular/
 
-# Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
+# Test and coverage output
+coverage/
+test-output/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
 
-# Environment files
-/.env
-
-# Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
-
-# TypeScript cache
+# TypeScript incremental build cache
 *.tsbuildinfo
 
+# Environment files. Lockfiles are intentionally NOT ignored:
+# a committed lockfile is required for reproducible builds and CI caching.
+.env
+.env.*
+!.env.example
+
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Capacitor native build artefacts (added in phase 10)
+apps/web/ios/App/Pods/
+apps/web/ios/App/build/
+apps/web/android/.gradle/
+apps/web/android/build/
+apps/web/android/app/build/
+apps/web/android/local.properties

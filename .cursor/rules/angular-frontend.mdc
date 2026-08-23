@@ -1,0 +1,57 @@
+---
+description: Angular conventions for apps/web - signals, state, forms, components
+globs: apps/web/**/*.ts
+alwaysApply: false
+---
+
+# Angular conventions
+
+Baseline: Angular 22, standalone, zoneless, `OnPush` (the framework default). See
+`docs/ADR/ADR-001-frontend-framework-and-ui.md` and `docs/ADR/ADR-005-state-management.md`.
+
+## Signals, RxJS and effects
+
+- **Signals by default** for state and anything derived from it.
+- **`computed()` for every derived value.** If you write an `effect` that sets a signal, it should
+  have been a `computed`.
+- **RxJS only for streams over time**: debounced input, SSE/websockets, retry with backoff,
+  `switchMap` cancellation. Convert at the boundary with `toSignal`/`toObservable`.
+- **Never hold the same truth in both a signal and a subject.**
+- **`effect()` only for leaving the reactive graph**: persisting a preference, analytics, driving an
+  imperative chart library, document title. Never to propagate state. Never to trigger HTTP.
+
+```typescript
+// BAD - effect used to derive state
+effect(() => this.total.set(this.items().reduce((a, i) => a + i.kcal, 0)));
+
+// GOOD
+readonly total = computed(() => this.items().reduce((a, i) => a + i.kcal, 0));
+```
+
+## Server state
+
+- Fetch through `httpResource`/`resource` in the feature's `data-access`, held by the feature store.
+- After a successful mutation, **invalidate the resource**. Never hand-patch a local array — that is
+  how a list and its detail view start disagreeing.
+- Session state (current user, role, entitlements, token) lives **only** in `core/auth`. Never copy
+  it into a feature store.
+
+## Feature structure
+
+`features/<feature>/` contains `data-access/`, `state/`, `domain/`, `ui/`, `pages/` and
+`<feature>.routes.ts`. Every feature is lazy-loaded via `loadChildren`.
+
+- `ui/` components are presentational: inputs and outputs only, no injected data services.
+- `pages/` compose `ui` with the store.
+- Mappers in `data-access/` convert DTO to domain model: parse dates, convert units. No component
+  ever parses a date string.
+
+## Forms and UI
+
+- Signal Forms validated with the Zod schema from `packages/contracts`. Do not rewrite validation
+  rules in the component.
+- Tailwind with design tokens for styling; Angular CDK for overlays, focus, a11y, virtual scroll.
+  No Angular Material.
+- Never bind `innerHTML` and never use `bypassSecurityTrust*` — the token strategy depends on the
+  app being XSS-free.
+- Entitlement-based UI gating is UX only. The API always re-checks.
