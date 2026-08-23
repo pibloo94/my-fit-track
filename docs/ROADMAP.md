@@ -21,6 +21,33 @@ does not announce itself; it arrives as a reasonable-sounding addition to the ph
 
 **Goal:** an empty but complete, deployable, verified pipeline. No product features.
 
+**Progress as of 2026-08-23.** Head is `2f46f25` on `main`. Resume with PostgreSQL + Prisma.
+Do not start phase 2.
+
+Done:
+
+- npm workspaces: `apps/web`, `apps/api`, `packages/contracts`, `packages/config`.
+- `.gitignore` no longer ignores `package-lock.json`; patterns are relative.
+- Shared ESLint (including import boundaries, covered by `tools/boundaries.test.mjs`), Prettier,
+  TypeScript 6.0.x hoisted. TypeScript 6 + Nest decorator metadata verified.
+- `packages/contracts`: cursor pagination, RFC 9457 problem details, health schema. Dual CJS/ESM
+  build; `npm run --workspaces` does **not** order dependencies, so root scripts run
+  `contracts:build` first.
+- NestJS API: `/api/v1/health`, typed config, `traceId`, RFC 9457 filter, Zod pipe, Helmet, CORS
+  (including Capacitor origins), throttling. Same `createApp()` used by tests and `main`.
+- Angular 22 app: standalone, zoneless, `application` builder, Tailwind, CDK. Health feature
+  consumes the shared contract via `httpResource`. `ui/` does not fetch. Problem+json interceptor.
+  Frontend boundary rules are live.
+- Angular CLI refuses Node 24.11 (wants 24.15+). `apps/web/scripts/ng.cjs` skips that gate. Remove
+  it after upgrading Node.
+
+Not done yet:
+
+- PostgreSQL via Docker Compose. Prisma with one throwaway model to prove migrations.
+- Testcontainers integration test. Playwright smoke test.
+- GitHub Actions PR pipeline and branch protection.
+- Deploy empty apps to staging.
+
 **Build:**
 
 - npm workspaces monorepo: `apps/web`, `apps/api`, `packages/contracts`, `packages/config`.
