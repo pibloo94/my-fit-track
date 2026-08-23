@@ -105,8 +105,10 @@ oversight to make and a confusing one to debug.
 - The domain layer must not import from `@nestjs/*`. Framework decorators belong in `api/` and
   `infrastructure/`; keeping them out of `domain/` is what allows domain tests to run without a
   Nest test harness.
-- TypeScript 6 compatibility with NestJS decorator metadata must be verified in phase 1, since
-  Angular 22 requires TypeScript 6.
+- TypeScript 6 compatibility with NestJS decorator metadata was verified empirically on 2026-08-23:
+  NestJS 11.2.1 on Fastify compiles and runs under TypeScript 6.0.3 with constructor injection
+  intact. See [ARCHITECTURE.md](../ARCHITECTURE.md#technical-risks) for the constraints this
+  uncovered.
 
 ## Reversal trigger
 

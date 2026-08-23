@@ -1072,14 +1072,24 @@ never appear.
 
 ## 16. Future and open decisions
 
-### Technical risks to verify in phase 1
+### Technical risks
 
-These are unresolved verifications, not assumptions already settled:
+**RESOLVED (2026-08-23) — TypeScript 6 with NestJS.** Verified empirically: NestJS 11.2.1 on the
+Fastify adapter compiles and runs under TypeScript 6.0.3, with `design:paramtypes` metadata emitted
+correctly and constructor injection resolving at runtime. A **single hoisted TypeScript version at
+the workspace root** is therefore used; the per-workspace contingency is not needed.
 
-**Angular 22 requires TypeScript 6, while NestJS depends on decorator metadata.** Whether NestJS
-11.2.x fully supports TypeScript 6 must be verified before pinning a single TypeScript version at
-the workspace root. Contingency: npm workspaces allows different TypeScript versions per package,
-which contains the problem to the API workspace if it appears.
+Two constraints discovered while verifying this, both of which affect configuration:
+
+- **The repository is pinned to TypeScript 6.0.x.** TypeScript 7 is already the latest stable
+  release, but `@angular/compiler-cli` and `@angular/build` declare `typescript >=6.0 <6.1` — a
+  closed range. TypeScript cannot be upgraded past 6.0 until Angular supports it, so it is pinned
+  deliberately rather than floating.
+- **`moduleResolution: "node"` (node10) is deprecated in TypeScript 6 and stops working in 7.** The
+  API uses `module`/`moduleResolution: "node16"`. Any new `tsconfig.json` must avoid the legacy
+  resolver rather than inherit it from an older template.
+
+Still unresolved:
 
 **Signal Forms is the newest dependency in the stack**, stable only since June 2026. Mitigation is
 already in place: Reactive Forms interop means a retreat is per-form rather than architectural.
@@ -1091,6 +1101,13 @@ should be load-checked before launch rather than discovered in production.
 **Angular 22 deprecated the Webpack build pipeline.** The project must stay on the `application`
 build system, which is also a prerequisite for the Vitest test builder. This is the default for new
 projects, so it is a constraint to respect rather than a migration to perform.
+
+### Implementation status
+
+Phase 1 is in progress. `apps/api` currently contains only the minimum needed to verify the
+TypeScript 6 risk above: a bootstrap on Fastify with a global `api/v1` prefix and a `health`
+module with constructor injection. No domain modules, no database, no cross-cutting infrastructure
+yet — those are the remainder of phase 1 in [ROADMAP.md](./ROADMAP.md#phase-1--foundation).
 
 ### Open decisions
 

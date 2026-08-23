@@ -47,10 +47,12 @@ components beyond what proves the build, Capacitor, the service worker, producti
 
 **Risks:**
 
-- **TypeScript 6 versus NestJS decorator metadata.** Angular 22 requires TypeScript 6; NestJS
-  compatibility is unverified. This is the first thing to test, because the fallback — different
-  TypeScript versions per workspace — affects the repository setup. Do not build on an unverified
-  assumption here.
+- **TypeScript 6 versus NestJS decorator metadata — RESOLVED.** Verified: NestJS 11.2.1 compiles and
+  runs under TypeScript 6.0.3 with decorator metadata intact, so a single hoisted TypeScript version
+  is used. Note the two constraints this uncovered: the repository is pinned to TypeScript 6.0.x
+  because Angular declares `typescript >=6.0 <6.1` even though TypeScript 7 is stable, and
+  `moduleResolution: "node"` must not be used since it is removed in TypeScript 7. See
+  [ARCHITECTURE.md](./ARCHITECTURE.md#technical-risks).
 - Angular 22 deprecated the Webpack pipeline; the project must stay on the `application` build
   system, which is also required by the Vitest builder.
 - Zoneless change detection can conflict with a dependency added later. Confirm early that the

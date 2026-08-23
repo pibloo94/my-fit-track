@@ -92,8 +92,10 @@ missing updates rather than an obvious error.
   ([ADR-007](./ADR-007-shared-contracts.md)).
 - The project must remain on the `application` build system; the Webpack pipeline is deprecated and
   is also a prerequisite for the Vitest test builder ([ADR-012](./ADR-012-testing-strategy.md)).
-- TypeScript 6 is required, which has an unverified interaction with NestJS decorator metadata —
-  tracked as a phase 1 risk in [ARCHITECTURE.md](../ARCHITECTURE.md#technical-risks-to-verify-in-phase-1).
+- TypeScript is pinned to 6.0.x for the whole repository, because `@angular/compiler-cli` and
+  `@angular/build` declare `typescript >=6.0 <6.1` — a closed range — even though TypeScript 7 is
+  already stable. Compatibility with NestJS was verified; see
+  [ARCHITECTURE.md](../ARCHITECTURE.md#technical-risks).
 
 ## Reversal trigger
 
