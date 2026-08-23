@@ -71,7 +71,11 @@ npm workspaces is less strict than pnpm about undeclared transitive imports, so 
 accidentally rely on something it does not declare.
 
 Task orchestration is npm scripts, which handles cross-workspace dependency ordering less elegantly
-than a real task graph.
+than a real task graph. This cost is not hypothetical and showed up on the first cross-workspace
+dependency: `npm run <script> --workspaces` executes in directory order, not dependency order, so it
+ran the API build before the contract build it depends on. It appeared to work only because a stale
+`dist/` was present, and failed on a clean checkout — which is to say, it would have failed first in
+CI. Ordering is therefore explicit in the root scripts rather than inferred.
 
 ## Consequences
 
@@ -85,12 +89,15 @@ than a real task graph.
   are never published to a registry.
 - Nothing in `apps/` may import from another entry in `apps/`. Code needed by both moves to
   `packages/`.
-- Module boundaries are enforced by ESLint (`eslint-plugin-boundaries` or
-  `import/no-restricted-paths`) with the rules listed in
+- Module boundaries are enforced by ESLint with `eslint-plugin-boundaries`, using the rules listed in
   [ARCHITECTURE.md](../ARCHITECTURE.md#enforced-import-rules). Unenforced boundaries erode; this is
   the mechanism that replaces Nx's boundary tooling.
-- TypeScript project references are used so `apps/*` consume `packages/contracts` as a typed
-  project rather than through path aliases into source, which keeps incremental builds honest.
+- `apps/*` consume `packages/contracts` as a built package through its `exports` map, not through a
+  path alias into its source, so what the apps compile against is what ships. The contract package
+  emits a dual build: CommonJS for the API, ESM for the web bundler, and one set of declarations.
+- Any root script that needs the contract declarations runs `contracts:build` first, explicitly.
+  TypeScript project references would let `tsc -b` derive that order instead, and are the natural
+  next step if the number of build-order dependencies grows beyond this one.
 - CI installs with `npm ci` from the committed lockfile.
 
 ## Reversal trigger

@@ -1,0 +1,14 @@
+{
+  // Everything, tests included, so the editor and ESLint's project service can see
+  // every file. Emitting is the job of tsconfig.build.json.
+  "extends": "@my-fit-track/config/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "es2023",
+    "lib": ["es2023"],
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src/**/*.ts", "vitest.config.mts", "scripts/**/*.mjs"]
+}

@@ -69,7 +69,11 @@ export const elements = [
  * the plugin silently skips them, which makes every policy below pass vacuously.
  */
 export const resolver = {
-  typescript: { project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'] },
+  typescript: {
+    project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'],
+    // Several tsconfigs is the expected shape of a workspace monorepo, not a mistake.
+    noWarnOnMultipleProjects: true,
+  },
 };
 
 export const violationMessage =

@@ -1,0 +1,12 @@
+{
+  // ESM build for the web bundler. Relative imports in src carry an explicit .js
+  // extension, so this output is also valid Node ESM rather than bundler-only.
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "outDir": "dist/esm",
+    "declaration": false,
+    "declarationDir": null
+  }
+}

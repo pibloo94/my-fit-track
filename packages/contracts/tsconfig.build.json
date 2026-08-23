@@ -1,0 +1,16 @@
+{
+  // CommonJS build plus the declarations both builds share. The API consumes this
+  // output through require(); tsconfig.build.esm.json produces what the web bundler
+  // consumes.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist/cjs",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

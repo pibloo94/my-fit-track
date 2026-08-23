@@ -1,13 +1,14 @@
+import { type HealthResponse } from '@my-fit-track/contracts';
 import { Injectable } from '@nestjs/common';
-
-export interface HealthStatus {
-  status: 'ok';
-  uptimeSeconds: number;
-}
 
 @Injectable()
 export class HealthService {
-  check(): HealthStatus {
-    return { status: 'ok', uptimeSeconds: Math.round(process.uptime()) };
+  check(): HealthResponse {
+    return {
+      status: 'ok',
+      version: process.env['APP_VERSION'] ?? 'dev',
+      uptimeSeconds: Math.round(process.uptime()),
+      checkedAt: new Date().toISOString(),
+    };
   }
 }
