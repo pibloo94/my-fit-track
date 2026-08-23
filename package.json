@@ -14,7 +14,7 @@
   "scripts": {
     "//": "npm run --workspaces executes in directory order, not dependency order, so anything that needs the contract declarations builds them first. See docs/ADR/ADR-006-monorepo-and-tooling.md.",
     "contracts:build": "npm run build --workspace @my-fit-track/contracts",
-    "build": "npm run contracts:build && npm run build --workspace @my-fit-track/api",
+    "build": "npm run contracts:build && npm run build --workspace @my-fit-track/api && npm run build --workspace @my-fit-track/web",
     "typecheck": "npm run contracts:build && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

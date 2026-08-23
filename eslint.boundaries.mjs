@@ -18,6 +18,11 @@ const sameModule = (type) => ({
   element: { type, captured: { module: '{{ from.element.captured.module }}' } },
 });
 
+/** A dependency target in the same frontend feature as the file being checked. */
+const sameFeature = (type) => ({
+  element: { type, captured: { feature: '{{ from.element.captured.feature }}' } },
+});
+
 /** A dependency target of any of the given types, in any module. */
 const anyOfType = (...types) => ({ element: { type: types } });
 
@@ -62,6 +67,46 @@ export const elements = [
   { type: 'api-root', pattern: 'apps/api/src', partialMatch: false },
   { type: 'contracts', pattern: 'packages/contracts/**', partialMatch: false },
   { type: 'tooling', pattern: 'packages/config/**', partialMatch: false },
+  {
+    type: 'web-feature-ui',
+    pattern: 'apps/web/src/app/features/*/ui/**',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  {
+    type: 'web-feature-data',
+    pattern: 'apps/web/src/app/features/*/data-access/**',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  {
+    type: 'web-feature-state',
+    pattern: 'apps/web/src/app/features/*/state/**',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  {
+    type: 'web-feature-domain',
+    pattern: 'apps/web/src/app/features/*/domain/**',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  {
+    type: 'web-feature-pages',
+    pattern: 'apps/web/src/app/features/*/pages/**',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  {
+    type: 'web-feature',
+    pattern: 'apps/web/src/app/features/*',
+    capture: ['feature'],
+    partialMatch: false,
+  },
+  { type: 'web-core', pattern: 'apps/web/src/app/core/**', partialMatch: false },
+  { type: 'web-shared', pattern: 'apps/web/src/app/shared/**', partialMatch: false },
+  { type: 'web-layout', pattern: 'apps/web/src/app/layout/**', partialMatch: false },
+  { type: 'web-root', pattern: 'apps/web/src/app', partialMatch: false },
 ];
 
 /**
@@ -156,6 +201,96 @@ export const policies = [
     // The contract package depends on Zod only, so both sides can consume it.
     from: { element: { type: 'contracts' } },
     allow: { to: anyOfType('contracts') },
+  },
+  {
+    from: { element: { type: 'web-feature-domain' } },
+    allow: { to: [sameFeature('web-feature-domain'), anyOfType('contracts')] },
+  },
+  {
+    // Presentational: inputs and outputs only. A data-access import here is the
+    // start of an untestable component.
+    from: { element: { type: 'web-feature-ui' } },
+    allow: {
+      to: [
+        sameFeature('web-feature-ui'),
+        sameFeature('web-feature-domain'),
+        anyOfType('web-shared', 'web-core'),
+      ],
+    },
+  },
+  {
+    from: { element: { type: 'web-feature-data' } },
+    allow: {
+      to: [
+        sameFeature('web-feature-data'),
+        sameFeature('web-feature-domain'),
+        anyOfType('web-core', 'contracts'),
+      ],
+    },
+  },
+  {
+    from: { element: { type: 'web-feature-state' } },
+    allow: {
+      to: [
+        sameFeature('web-feature-state'),
+        sameFeature('web-feature-data'),
+        sameFeature('web-feature-domain'),
+        anyOfType('web-core', 'contracts'),
+      ],
+    },
+  },
+  {
+    from: { element: { type: 'web-feature-pages' } },
+    allow: {
+      to: [
+        sameFeature('web-feature-pages'),
+        sameFeature('web-feature-ui'),
+        sameFeature('web-feature-state'),
+        sameFeature('web-feature-domain'),
+        anyOfType('web-shared', 'web-core'),
+      ],
+    },
+  },
+  {
+    // Feature routes and other top-level feature files. Never another feature.
+    from: { element: { type: 'web-feature' } },
+    allow: {
+      to: [
+        sameFeature('web-feature'),
+        sameFeature('web-feature-pages'),
+        sameFeature('web-feature-ui'),
+        sameFeature('web-feature-state'),
+        sameFeature('web-feature-data'),
+        sameFeature('web-feature-domain'),
+        anyOfType('web-core', 'web-shared', 'contracts'),
+      ],
+    },
+  },
+  {
+    from: { element: { type: 'web-core' } },
+    allow: { to: anyOfType('web-core', 'web-shared', 'contracts') },
+  },
+  {
+    from: { element: { type: 'web-shared' } },
+    allow: { to: anyOfType('web-shared') },
+  },
+  {
+    from: { element: { type: 'web-layout' } },
+    allow: { to: anyOfType('web-layout', 'web-shared', 'web-core') },
+  },
+  {
+    from: { element: { type: 'web-root' } },
+    allow: {
+      to: anyOfType(
+        'web-root',
+        'web-layout',
+        'web-feature',
+        'web-feature-pages',
+        'web-core',
+        'web-shared',
+        'contracts',
+      ),
+    },
   },
 ];
 

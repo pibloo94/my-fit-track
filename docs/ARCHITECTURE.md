@@ -393,7 +393,7 @@ Live today, for the API:
   side.
 - Apps must not import each other, since each is a separately deployable unit.
 
-Planned, and to be added with `apps/web`:
+Live today, for the web app:
 
 - A feature must not import from another feature. Shared code moves to `shared/`; shared behaviour
   moves to `core/`; cross-feature interaction happens through routing or a `core` service.

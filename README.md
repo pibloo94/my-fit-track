@@ -4,8 +4,8 @@ A training and nutrition tracking application: workouts, exercises, sets, reps, 
 progression, diet, foods, recipes, calories and macronutrients, body measurements, habits and
 statistics.
 
-> **Status: architecture phase.** No application code exists yet. The technical design is complete
-> and documented; implementation starts with phase 1 of the roadmap.
+> **Status: phase 1.** The architecture is documented and the first vertical slice is in place: the
+> API serves `/api/v1/health` and the Angular app consumes it through `packages/contracts`.
 
 ## Documentation
 

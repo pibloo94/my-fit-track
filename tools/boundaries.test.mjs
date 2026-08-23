@@ -22,6 +22,10 @@ const MODULES = 'apps/api/src/modules';
 const A = `${MODULES}/__fixture_a__`;
 const B = `${MODULES}/__fixture_b__`;
 const COMMON_FIXTURE = 'apps/api/src/common/__fixture_result__.ts';
+const WEB = 'apps/web/src/app/features';
+const WEB_A = `${WEB}/__fixture_a__`;
+const WEB_B = `${WEB}/__fixture_b__`;
+const WEB_CORE_LEAK = 'apps/web/src/app/core/__fixture_leak__.ts';
 
 /** Targets that fixtures import. Written to disk so imports actually resolve. */
 const targets = {
@@ -32,6 +36,9 @@ const targets = {
   [`${B}/other.service.ts`]: 'export class OtherService {}\n',
   // common/ will hold real code, so only this one file is created and removed.
   [COMMON_FIXTURE]: 'export type Result<T> = { value: T };\n',
+  [`${WEB_A}/domain/model.ts`]: 'export interface HealthView {\n  readonly id: string;\n}\n',
+  [`${WEB_A}/data-access/api.ts`]: 'export class HealthApi {}\n',
+  [`${WEB_B}/data-access/other.ts`]: 'export class OtherApi {}\n',
 };
 
 /**
@@ -110,6 +117,27 @@ const cases = [
     imported: 'EntityService',
     expected: '"api-module" is not allowed to import "api-application"',
   },
+  {
+    name: 'a presentational component may use its own domain model',
+    file: `${WEB_A}/ui/card.ts`,
+    from: '../domain/model',
+    imported: 'HealthView',
+    expected: null,
+  },
+  {
+    name: 'a presentational component may not fetch',
+    file: `${WEB_A}/ui/leak.ts`,
+    from: '../data-access/api',
+    imported: 'HealthApi',
+    expected: '"web-feature-ui" is not allowed to import "web-feature-data"',
+  },
+  {
+    name: 'one feature may not import another feature',
+    file: `${WEB_A}/pages/cross.ts`,
+    from: '../../__fixture_b__/data-access/other',
+    imported: 'OtherApi',
+    expected: '"web-feature-pages" is not allowed to import "web-feature-data"',
+  },
 ];
 
 /** The real policies, with a syntax-only parser so no tsconfig has to include fixtures. */
@@ -149,6 +177,9 @@ afterAll(async () => {
   await rm(join(REPO_ROOT, A), { recursive: true, force: true });
   await rm(join(REPO_ROOT, B), { recursive: true, force: true });
   await rm(join(REPO_ROOT, COMMON_FIXTURE), { force: true });
+  await rm(join(REPO_ROOT, WEB_A), { recursive: true, force: true });
+  await rm(join(REPO_ROOT, WEB_B), { recursive: true, force: true });
+  await rm(join(REPO_ROOT, WEB_CORE_LEAK), { force: true });
 });
 
 describe('architectural boundaries', () => {
@@ -177,6 +208,20 @@ describe('architectural boundaries', () => {
 
     expect(result?.messages ?? []).toEqual([]);
     expect(resolved.settings['import/resolver']).toHaveProperty('typescript');
+  });
+
+  it('rejects core importing a feature', async () => {
+    await mkdir(dirname(join(REPO_ROOT, WEB_CORE_LEAK)), { recursive: true });
+    await writeFile(
+      join(REPO_ROOT, WEB_CORE_LEAK),
+      "import { HealthView } from '../features/__fixture_a__/domain/model';\n\nexport const used = HealthView;\n",
+      'utf8',
+    );
+
+    const messages = await messagesFor(WEB_CORE_LEAK);
+    expect(messages.join('\n')).toContain(
+      '"web-core" is not allowed to import "web-feature-domain"',
+    );
   });
 });
 
