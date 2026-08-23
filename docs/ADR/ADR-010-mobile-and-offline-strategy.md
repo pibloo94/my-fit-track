@@ -57,8 +57,8 @@ The asymmetry in the requirement is the whole argument. One flow has an unaccept
 the rest degrade acceptably. So we buy durability exactly where it is needed — local persistence of
 the active session plus a retrying outbox — and skip the general solution.
 
-Concretely: the in-progress session lives in IndexedDB and is the source of truth for the *active
-session screen only*. Each set entry is queued with an `Idempotency-Key` and retried with backoff
+Concretely: the in-progress session lives in IndexedDB and is the source of truth for the _active
+session screen only_. Each set entry is queued with an `Idempotency-Key` and retried with backoff
 until acknowledged. Because the server deduplicates on that key
 ([ADR-003](./ADR-003-api-style.md)), a retry after an ambiguous timeout cannot duplicate a set. This
 is a small, well-understood amount of machinery: an append-only local queue, a retry loop and a
@@ -101,7 +101,7 @@ Two client platforms mean two authentication code paths and platform-specific bu
 - Angular's service worker is enabled for app-shell caching, so the application opens instantly and
   survives a flaky connection. Cached API responses are limited to genuinely static reference data,
   such as the exercise catalogue.
-- The workout logging feature owns its local persistence and outbox. This is deliberately *not* a
+- The workout logging feature owns its local persistence and outbox. This is deliberately _not_ a
   generic offline layer available to other features — generalising it prematurely is how the
   expensive version gets built by accident.
 - Every mutating endpoint used by the outbox accepts `Idempotency-Key`, and the server persists key,

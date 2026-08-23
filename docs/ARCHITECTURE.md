@@ -76,25 +76,25 @@ corrected as part of this work.
 Every entry links to the ADR containing the full alternatives comparison, trade-offs and
 consequences. The table is a summary, not the justification.
 
-| Concern | Choice | ADR |
-| --- | --- | --- |
-| Repository layout | Single repo, npm workspaces, no Nx | [ADR-006](./ADR/ADR-006-monorepo-and-tooling.md) |
-| Frontend framework | Angular 22, standalone, signals-first | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md) |
-| UI layer | Tailwind CSS + Angular CDK, no Material | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md) |
-| Forms | Signal Forms with shared Zod schemas | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md) |
-| Backend framework | NestJS 11 + Fastify adapter | [ADR-002](./ADR/ADR-002-backend-framework.md) |
-| API style | REST, URI-versioned, RFC 9457 errors | [ADR-003](./ADR/ADR-003-api-style.md) |
-| Database | PostgreSQL | [ADR-004](./ADR/ADR-004-database-and-orm.md) |
-| ORM | Prisma, with raw SQL escape hatch | [ADR-004](./ADR/ADR-004-database-and-orm.md) |
-| Frontend state | Signals + feature stores, no NgRx | [ADR-005](./ADR/ADR-005-state-management.md) |
-| Shared contract | `packages/contracts` with Zod | [ADR-007](./ADR/ADR-007-shared-contracts.md) |
-| Authentication | Self-hosted JWT + rotating refresh tokens | [ADR-008](./ADR/ADR-008-authentication.md) |
-| Authorization | Role + entitlement + quota, separated | [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md) |
-| Mobile & offline | Capacitor, PWA with a workout outbox | [ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md) |
-| Food data | Provider port, external catalogue | [ADR-011](./ADR/ADR-011-nutrition-data-source.md) |
-| Testing | Vitest, Testcontainers, Playwright | [ADR-012](./ADR/ADR-012-testing-strategy.md) |
-| Hosting | Static CDN + container API + managed Postgres | [ADR-013](./ADR/ADR-013-hosting-and-deployment.md) |
-| Domain conventions | SI units, local dates, historical snapshots | [ADR-014](./ADR/ADR-014-domain-model-conventions.md) |
+| Concern            | Choice                                        | ADR                                                        |
+| ------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| Repository layout  | Single repo, npm workspaces, no Nx            | [ADR-006](./ADR/ADR-006-monorepo-and-tooling.md)           |
+| Frontend framework | Angular 22, standalone, signals-first         | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
+| UI layer           | Tailwind CSS + Angular CDK, no Material       | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
+| Forms              | Signal Forms with shared Zod schemas          | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
+| Backend framework  | NestJS 11 + Fastify adapter                   | [ADR-002](./ADR/ADR-002-backend-framework.md)              |
+| API style          | REST, URI-versioned, RFC 9457 errors          | [ADR-003](./ADR/ADR-003-api-style.md)                      |
+| Database           | PostgreSQL                                    | [ADR-004](./ADR/ADR-004-database-and-orm.md)               |
+| ORM                | Prisma, with raw SQL escape hatch             | [ADR-004](./ADR/ADR-004-database-and-orm.md)               |
+| Frontend state     | Signals + feature stores, no NgRx             | [ADR-005](./ADR/ADR-005-state-management.md)               |
+| Shared contract    | `packages/contracts` with Zod                 | [ADR-007](./ADR/ADR-007-shared-contracts.md)               |
+| Authentication     | Self-hosted JWT + rotating refresh tokens     | [ADR-008](./ADR/ADR-008-authentication.md)                 |
+| Authorization      | Role + entitlement + quota, separated         | [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md) |
+| Mobile & offline   | Capacitor, PWA with a workout outbox          | [ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)    |
+| Food data          | Provider port, external catalogue             | [ADR-011](./ADR/ADR-011-nutrition-data-source.md)          |
+| Testing            | Vitest, Testcontainers, Playwright            | [ADR-012](./ADR/ADR-012-testing-strategy.md)               |
+| Hosting            | Static CDN + container API + managed Postgres | [ADR-013](./ADR/ADR-013-hosting-and-deployment.md)         |
+| Domain conventions | SI units, local dates, historical snapshots   | [ADR-014](./ADR/ADR-014-domain-model-conventions.md)       |
 
 ### Explicitly rejected
 
@@ -372,8 +372,28 @@ features/<feature>/
 
 ### Enforced import rules
 
-These are checked by ESLint (`eslint-plugin-boundaries` or `import/no-restricted-paths`), not by
-convention:
+These are checked by ESLint, not by convention. The policies live in `eslint.boundaries.mjs` and use
+`eslint-plugin-boundaries`, which classifies every file into an architectural element from its path
+and then decides each import against a policy list.
+
+Live today, for the API:
+
+- `domain/` may import only its own `domain/`. No framework, no persistence, no transport, not even
+  the wire contract. This is what lets domain logic be tested without a Nest harness or a database.
+- `api/` (controllers) may reach the application layer of its own module, plus `common/` and
+  contracts. It may not reach into `infrastructure/`.
+- `application/` may reach its own `domain/` and `infrastructure/`, plus `common/`, platform
+  services and contracts.
+- A module must not import another module, at any layer. Cross-module interaction goes through an
+  in-process domain event.
+- Simple modules with no domain logic are treated as one element, so their internal
+  controller-to-service imports need no allowance.
+- `packages/contracts` may import only itself, and separately may not import `@nestjs/*`,
+  `@angular/*`, Prisma or Fastify — a framework import there would make it unusable by the other
+  side.
+- Apps must not import each other, since each is a separately deployable unit.
+
+Planned, and to be added with `apps/web`:
 
 - A feature must not import from another feature. Shared code moves to `shared/`; shared behaviour
   moves to `core/`; cross-feature interaction happens through routing or a `core` service.
@@ -381,12 +401,19 @@ convention:
   code is not actually cross-cutting.
 - `ui/` must not import from `data-access/`. Presentational components receive inputs and emit
   outputs; this is what makes them testable and reusable.
-- `domain/` must not import from `data-access/`, `infrastructure/` or any framework module.
-- On the API side, `domain/` must not import from `infrastructure/`, and `infrastructure/` must not
-  be imported by controllers directly.
 
 The reason to automate these rather than trust review: they are exactly the rules that erode under
 time pressure, and a circular feature dependency is far cheaper to prevent than to untangle.
+
+One trap worth recording, because it made the rules pass while enforcing nothing. The plugin skips
+any import whose target it cannot resolve, and it cannot resolve extensionless TypeScript imports on
+its own. Without `eslint-import-resolver-typescript` wired into `settings['import/resolver']`, every
+policy above succeeds vacuously.
+
+A boundary rule that has never rejected anything is not evidence of a clean codebase, so
+`tools/boundaries.test.mjs` imports the same policy objects the real lint run uses and asserts, for
+each rule, both an import that must be rejected and one that must be allowed. Removing the resolver
+makes six of those tests fail, which is the property that matters.
 
 ---
 
@@ -651,10 +678,10 @@ intermittently broken login on mobile, which is exactly the kind of defect that 
 Therefore the client defines a `TokenStorage` port with two adapters, selected at bootstrap by
 platform:
 
-| Platform | Refresh token location | Access token |
-| --- | --- | --- |
-| Browser | `HttpOnly` cookie, set and read only by the server | In memory |
-| Capacitor | OS secure storage: iOS Keychain, Android Keystore | In memory |
+| Platform  | Refresh token location                             | Access token |
+| --------- | -------------------------------------------------- | ------------ |
+| Browser   | `HttpOnly` cookie, set and read only by the server | In memory    |
+| Capacitor | OS secure storage: iOS Keychain, Android Keystore  | In memory    |
 
 `@capacitor/preferences` is explicitly **not** acceptable for tokens — it is unencrypted
 `UserDefaults`/`SharedPreferences`. A dedicated secure-storage plugin is required.
@@ -689,7 +716,7 @@ that scenario is cache coordination, not action auditing. See
 Conflating these is what produces duplicated, drifting state.
 
 **Server state** — data owned by the backend. Lives in the feature's `state/` store, fetched
-through `data-access/`, held as `httpResource` or signals derived from it. It is a *cache*, and it
+through `data-access/`, held as `httpResource` or signals derived from it. It is a _cache_, and it
 is treated as one: it has an owner, an invalidation path and no second copy elsewhere. When a
 mutation succeeds, the store invalidates the affected resources rather than patching a local array
 by hand — hand-patching is how a list and its detail view start disagreeing.
@@ -704,7 +731,7 @@ into a feature store, because two sources of truth for "who is logged in" is a s
 to happen.
 
 **Domain state** — derived values with product meaning: today's remaining macros, current weekly
-volume, whether a set is a new record. This is *always* `computed()` over server state, never
+volume, whether a set is a new record. This is _always_ `computed()` over server state, never
 stored. Storing a derived total guarantees it will eventually disagree with the data it came from.
 
 ### Signals, RxJS and effects — when to use which
@@ -743,12 +770,12 @@ in the wild. See [ADR-003](./ADR/ADR-003-api-style.md).
 
 The domain has four distinct concepts that a naive `/workouts` endpoint would blur together:
 
-| Resource | Meaning |
-| --- | --- |
-| `/exercises` | The catalogue: an exercise definition, global or user-authored |
-| `/routines` | A training plan: prescription, what the user intends to do |
-| `/workout-sessions` | A performed workout: what actually happened, with a date |
-| `/set-entries` | An individual logged set inside a session |
+| Resource            | Meaning                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `/exercises`        | The catalogue: an exercise definition, global or user-authored |
+| `/routines`         | A training plan: prescription, what the user intends to do     |
+| `/workout-sessions` | A performed workout: what actually happened, with a date       |
+| `/set-entries`      | An individual logged set inside a session                      |
 
 `/workouts` is rejected as a resource name because it means "plan" to one reader and "performed
 session" to another, and that ambiguity migrates from the URL into the data model.
@@ -1117,36 +1144,36 @@ inventing a requirement here would produce architecture that serves no one.
 **OPEN DECISION — Food data licensing.** Open Food Facts is distributed under the ODbL, which
 imposes share-alike obligations on derived databases and may conflict with a proprietary,
 commercially licensed product. USDA FoodData Central is public domain and therefore commercially
-safer, but its coverage of European branded products is weaker. *Needed to decide:* legal advice on
-ODbL applicability to our use, and the target market's product coverage requirements. *Mitigation
-already in the design:* the `FoodCatalogueProvider` port keeps the source swappable, so this
+safer, but its coverage of European branded products is weaker. _Needed to decide:_ legal advice on
+ODbL applicability to our use, and the target market's product coverage requirements. _Mitigation
+already in the design:_ the `FoodCatalogueProvider` port keeps the source swappable, so this
 decision can be deferred without blocking the nutrition feature.
 
 **OPEN DECISION — Monetisation model.** Which capabilities are free and which are paid, and whether
-limits are feature-based or quota-based. *Needed to decide:* product positioning and competitor
-analysis. *Consequence of deferring:* the entitlement mechanism is built
+limits are feature-based or quota-based. _Needed to decide:_ product positioning and competitor
+analysis. _Consequence of deferring:_ the entitlement mechanism is built
 ([ADR-009](./ADR/ADR-009-authorization-and-entitlements.md)) but the policies are not, which is the
 correct order — the mechanism is architecture, the policies are configuration.
 
 **OPEN DECISION — Health-data compliance posture.** Whether the product processes GDPR Article 9
 special-category data, and what that requires at launch: explicit consent flows, a data processing
-agreement, a retention schedule, possibly a data protection impact assessment. *Needed to decide:*
+agreement, a retention schedule, possibly a data protection impact assessment. _Needed to decide:_
 legal advice specific to the target jurisdictions. This is not an engineering judgement.
 
 **OPEN DECISION — Coach and sharing features.** If a trainer can view or write a client's data, the
 authorization model changes from "a resource has exactly one owner" to inter-user relationships
-with granted scopes. *Needed to decide:* whether this is in the product vision at all. *Timing:*
+with granted scopes. _Needed to decide:_ whether this is in the product vision at all. _Timing:_
 must be decided before phase 5, because retrofitting relationship-based authorization touches every
 endpoint.
 
 **OPEN DECISION — Wearable and health-platform integrations** (Apple Health, Google Fit, Garmin,
 Strava). These change ingestion: background synchronisation, deduplication against manual entries,
-and conflict rules. *Needed to decide:* whether users are expected to arrive with existing data.
-*Timing:* not before the core logging flows are validated.
+and conflict rules. _Needed to decide:_ whether users are expected to arrive with existing data.
+_Timing:_ not before the core logging flows are validated.
 
 **OPEN DECISION — Internationalisation.** If the product launches in more than one language, the
 exercise and food catalogues need translatable names, which is a data-model concern rather than a
-UI concern. *Needed to decide:* target markets. *Timing:* before phase 4, since the exercise
+UI concern. _Needed to decide:_ target markets. _Timing:_ before phase 4, since the exercise
 catalogue is built there.
 
 **OPEN DECISION — Expected scale.** No user or volume estimate exists, so infrastructure sizing in

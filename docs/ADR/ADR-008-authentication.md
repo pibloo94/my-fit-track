@@ -36,7 +36,7 @@ provider plumbing and rate limiting all arrive working, and the highest-risk cod
 maintained by specialists. It is rejected here on three grounds, and the rejection is a genuine
 trade-off rather than a clear win. First, user identity is inseparable from domain data in this
 product — every table is user-scoped — so the user record lives in our database regardless, meaning
-we carry the integration complexity *and* the data model. Second, per-monthly-active-user pricing
+we carry the integration complexity _and_ the data model. Second, per-monthly-active-user pricing
 compounds exactly as the product succeeds, and for a product intended to be sold, that is a margin
 decision made early and hard to unwind. Third, vendor coupling on authentication is one of the
 harder things to migrate away from later. The risk this creates is stated in the trade-offs and
@@ -68,7 +68,7 @@ Capacitor — see below — which is why the storage decision is platform-depend
 The token design is standard for a reason: a short-lived access token limits the damage window of a
 leak, and a rotating server-stored refresh token provides what a stateless JWT cannot — actual
 revocation, "sign out everywhere", a device list, and detection of token theft. Rotation is only
-worth implementing *with* reuse detection: when a token that has already been consumed is presented,
+worth implementing _with_ reuse detection: when a token that has already been consumed is presented,
 either the client is broken or the token was stolen and replayed, and revoking the whole family is
 the correct response in both cases.
 
@@ -110,10 +110,10 @@ disk.
   entire family.
 - **Storage by platform:**
 
-  | Platform | Refresh token | Access token |
-  | --- | --- | --- |
-  | Browser | `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth` cookie | In memory |
-  | Capacitor | OS secure storage: iOS Keychain, Android Keystore | In memory |
+  | Platform  | Refresh token                                                 | Access token |
+  | --------- | ------------------------------------------------------------- | ------------ |
+  | Browser   | `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth` cookie | In memory    |
+  | Capacitor | OS secure storage: iOS Keychain, Android Keystore             | In memory    |
 
 - `@capacitor/preferences` is **not** acceptable for tokens — it is unencrypted `UserDefaults` and
   `SharedPreferences`. A dedicated secure-storage plugin is required.

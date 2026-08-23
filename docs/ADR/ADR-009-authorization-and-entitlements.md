@@ -11,7 +11,7 @@ some features and raise some limits, and payments will go through a provider suc
 that is being implemented now, but the model must be able to accommodate it without reworking every
 endpoint.
 
-What *is* needed immediately is resource ownership: every piece of training and nutrition data
+What _is_ needed immediately is resource ownership: every piece of training and nutrition data
 belongs to exactly one user and must never be readable by another.
 
 The exact commercial packaging is unknown — which features are paid, and whether limits are
@@ -22,11 +22,11 @@ feature-based or quota-based, is an open product decision recorded in
 
 Separate three concepts that are commonly conflated, and model them independently:
 
-| Concept | Question it answers | Example |
-| --- | --- | --- |
-| **Role** | Who are you in the system? | `user`, `admin` |
-| **Entitlement** | What capabilities does your plan grant? | `advanced_analytics`, `data_export` |
-| **Quota** | How much of a metered resource may you use? | 3 routines, 30 days of history |
+| Concept         | Question it answers                         | Example                             |
+| --------------- | ------------------------------------------- | ----------------------------------- |
+| **Role**        | Who are you in the system?                  | `user`, `admin`                     |
+| **Entitlement** | What capabilities does your plan grant?     | `advanced_analytics`, `data_export` |
+| **Quota**       | How much of a metered resource may you use? | 3 routines, 30 days of history      |
 
 Ownership is enforced in the query predicate at the application layer. Entitlements are checked by a
 guard. The frontend mirrors entitlements for user experience only; the API is the sole authority.
@@ -98,7 +98,7 @@ of them is authoritative.
   Repository methods take the user identifier as a required parameter. Resources belonging to another
   user return `404`, not `403`, so the API does not confirm their existence.
 - The frontend exposes an `entitlements` signal from `core/auth` and a guard plus a structural
-  directive for conditional UI. Every gated capability is *also* checked server-side on the endpoint
+  directive for conditional UI. Every gated capability is _also_ checked server-side on the endpoint
   that performs the work. Client gating is presentation.
 - Administrative capability is a role check, and administrative access to another user's data — if
   ever built — must be audited, since it is access to health data.

@@ -1,0 +1,6 @@
+package-lock.json
+dist/
+build/
+coverage/
+.angular/
+LICENSE

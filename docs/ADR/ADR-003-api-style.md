@@ -87,12 +87,12 @@ are in use.
 
 - **Resource naming is fixed** around the domain distinction that matters:
 
-  | Resource | Meaning |
-  | --- | --- |
-  | `/exercises` | Catalogue definition, global or user-authored |
-  | `/routines` | A plan: what the user intends to do |
-  | `/workout-sessions` | A performed workout: what actually happened |
-  | `/set-entries` | An individual logged set |
+  | Resource            | Meaning                                       |
+  | ------------------- | --------------------------------------------- |
+  | `/exercises`        | Catalogue definition, global or user-authored |
+  | `/routines`         | A plan: what the user intends to do           |
+  | `/workout-sessions` | A performed workout: what actually happened   |
+  | `/set-entries`      | An individual logged set                      |
 
   `/workouts` is not used, because it reads as "plan" to one person and "performed session" to
   another, and that ambiguity propagates into the data model.

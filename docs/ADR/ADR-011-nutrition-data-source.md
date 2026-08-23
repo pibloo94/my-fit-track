@@ -111,9 +111,9 @@ cleanly. Mitigated by keeping the interface narrow: search, get by identifier, g
 ## Open question
 
 **OPEN DECISION — Open Food Facts ODbL compatibility with a proprietary commercial product.**
-*Needed to resolve:* legal advice on whether our use constitutes a derived database triggering
+_Needed to resolve:_ legal advice on whether our use constitutes a derived database triggering
 share-alike, and a product decision on how important European branded-product coverage is.
-*Blocking:* the final provider choice, not the nutrition feature itself. *Owner:* project owner,
+_Blocking:_ the final provider choice, not the nutrition feature itself. _Owner:_ project owner,
 with legal counsel.
 
 ## Reversal trigger

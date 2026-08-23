@@ -25,10 +25,10 @@ Seven conventions, binding on the schema, the domain layer and the contract pack
 `SessionExercise` and `SetEntry` describe **what happened**. A session may record which routine it
 came from, but never depends on it for its content.
 
-*Alternative considered:* one `Workout` entity with a `isTemplate` flag, reused for both. Simpler,
+_Alternative considered:_ one `Workout` entity with a `isTemplate` flag, reused for both. Simpler,
 and the most common shortcut.
 
-*Why it loses:* the two things have different lifecycles. Plans get edited — an exercise swapped, a
+_Why it loses:_ the two things have different lifecycles. Plans get edited — an exercise swapped, a
 target changed, a day reordered. If history points at the plan for its content, editing next month's
 routine silently rewrites last month's training log. The user's progression data, which is the entire
 value of the product, becomes unreliable. There is no recovery from this without a full audit trail
@@ -39,10 +39,10 @@ that a flag-based model does not have.
 A `DiaryEntry` records the computed calories and macronutrients at the moment of logging, alongside
 the food reference. A `SetEntry` records the exercise identity it was performed against.
 
-*Alternative considered:* store only foreign keys and compute totals on read, which normalises
+_Alternative considered:_ store only foreign keys and compute totals on read, which normalises
 properly and avoids duplicated data.
 
-*Why it loses:* the referenced data is not stable. External catalogue foods get corrected and
+_Why it loses:_ the referenced data is not stable. External catalogue foods get corrected and
 re-imported ([ADR-011](./ADR-011-nutrition-data-source.md)); user-authored foods get edited. With
 references alone, correcting a food's protein value retroactively changes what the user ate three
 months ago. For someone tracking a deficit, a diary that rewrites the past is worse than no diary.
@@ -54,9 +54,9 @@ historical facts.
 Storage uses SI: grams, kilograms, metres, seconds. The user's kilogram or pound preference lives on
 `UserPreferences` and is applied only in the presentation layer.
 
-*Alternative considered:* store values in the unit the user entered, with a unit column per row.
+_Alternative considered:_ store values in the unit the user entered, with a unit column per row.
 
-*Why it loses:* every aggregate then has to convert before summing, and one forgotten conversion
+_Why it loses:_ every aggregate then has to convert before summing, and one forgotten conversion
 produces a total that is wrong by a factor of 2.2 — plausible enough to go unnoticed and corrupting
 every statistic downstream. Mixed-unit rows also make indexing and comparison meaningless. Column
 names carry the unit (`weight_kg`, `duration_seconds`) so a wrong assumption is visible at the call
@@ -67,9 +67,9 @@ site.
 The date a session or diary entry belongs to is stored as `DATE`, with the user's timezone on their
 profile. Precise instants, where needed, are stored separately as `timestamptz`.
 
-*Alternative considered:* a single UTC timestamp, converted for display.
+_Alternative considered:_ a single UTC timestamp, converted for display.
 
-*Why it loses:* a meal logged at 23:30 local time is stored as the following day in UTC for much of
+_Why it loses:_ a meal logged at 23:30 local time is stored as the following day in UTC for much of
 Europe. Every daily total, every streak calculation and every "today's macros" view is then wrong for
 late-evening entries — a bug that appears intermittently, only for some users, only at some times of
 day, which makes it very hard to diagnose from a report. "What day did this belong to" is a question
@@ -80,9 +80,9 @@ about the user's calendar, not about an instant in time, so it is stored as a ca
 Soft delete for user-visible history, so an accidental tap is recoverable. Hard, irreversible delete
 for GDPR erasure requests.
 
-*Alternative considered:* soft delete everywhere.
+_Alternative considered:_ soft delete everywhere.
 
-*Why it loses:* soft delete does not satisfy a right-to-erasure request. Conflating them means either
+_Why it loses:_ soft delete does not satisfy a right-to-erasure request. Conflating them means either
 users cannot undo a mistake, or the product cannot honour a legal obligation. They are different
 operations with different guarantees and need separate implementations, with the hard delete
 cascading to tokens, audit rows and cached data.
@@ -92,12 +92,12 @@ cascading to tokens, audit rows and cached data.
 Personal records, weekly volume and estimated one-rep-max progression start as indexed queries.
 Materialised views or summary tables are introduced when a query is measurably slow.
 
-*Alternative considered:* maintain denormalised aggregate tables from the start.
+_Alternative considered:_ maintain denormalised aggregate tables from the start.
 
-*Why it loses:* every maintained aggregate is a consistency obligation — a write path that can drift
+_Why it loses:_ every maintained aggregate is a consistency obligation — a write path that can drift
 from its source, and a repair job when it does. Postgres handles years of one user's training data
 without difficulty. Introducing caches before measuring is paying maintenance cost for a performance
-problem that does not exist. Note the asymmetry with convention 2: a *historical snapshot* is a
+problem that does not exist. Note the asymmetry with convention 2: a _historical snapshot_ is a
 deliberately immutable fact, not a cache of a live calculation.
 
 ### 7. Every user-owned row carries `user_id`, and every query filters on it
@@ -105,10 +105,10 @@ deliberately immutable fact, not a cache of a live calculation.
 Tenant isolation is enforced in the query predicate at the repository layer. Repository methods take
 the user identifier as a required parameter.
 
-*Alternative considered:* rely on ownership checks in the service layer after loading, or on
+_Alternative considered:_ rely on ownership checks in the service layer after loading, or on
 PostgreSQL row-level security.
 
-*Why it loses:* a check performed after loading is a check that can be forgotten on the next
+_Why it loses:_ a check performed after loading is a check that can be forgotten on the next
 endpoint, and the failure mode is a data leak rather than an error. Filtering in the predicate makes
 the failure mode "no rows returned", which is safe. Row-level security is a legitimate stronger
 option and worth revisiting, but it splits authorization logic between the application and the

@@ -54,7 +54,7 @@ architecture change.
 ## Reason
 
 A monorepo is justified by the shared contract and by atomic cross-cutting changes — that part is
-clear. The interesting decision is *how little tooling* to put on top of it, and the answer is:
+clear. The interesting decision is _how little tooling_ to put on top of it, and the answer is:
 as little as delivers the benefit we can name. The benefit we can name is enforced module
 boundaries, and that comes from ESLint. Everything else Nx offers is a solution to a scale problem
 we do not have, purchased with a permanent maintenance obligation.
@@ -98,6 +98,6 @@ than a real task graph.
 Adopt **Turborepo** when the pull request pipeline exceeds roughly 8 minutes, or when the repository
 grows past about four workspaces. It is a low-cost, additive change.
 
-Reconsider **Nx** only if a second developer joins *and* the number of shared libraries grows past
+Reconsider **Nx** only if a second developer joins _and_ the number of shared libraries grows past
 roughly five, at which point generators and `affected` start paying for their maintenance cost.
 Adopting it before that would be paying for capability we cannot use.

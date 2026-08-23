@@ -23,11 +23,11 @@ reversals safe, not to justify the past.
 
 ## Statuses
 
-| Status | Meaning |
-| --- | --- |
-| `Proposed` | Written, not yet acted on |
-| `Accepted` | Decided; implementation follows this |
-| `Superseded` | Replaced by a later ADR, which is linked |
+| Status       | Meaning                                       |
+| ------------ | --------------------------------------------- |
+| `Proposed`   | Written, not yet acted on                     |
+| `Accepted`   | Decided; implementation follows this          |
+| `Superseded` | Replaced by a later ADR, which is linked      |
 | `Deprecated` | No longer applies, with no direct replacement |
 
 Every ADR in this index is currently `Accepted` as a design decision. None of them has been
@@ -36,22 +36,22 @@ not "this is running in production".
 
 ## Index
 
-| ADR | Decision | Status |
-| --- | --- | --- |
-| [ADR-001](./ADR-001-frontend-framework-and-ui.md) | Frontend framework, UI layer and forms | Accepted |
-| [ADR-002](./ADR-002-backend-framework.md) | Backend framework | Accepted |
-| [ADR-003](./ADR-003-api-style.md) | API style, versioning and error format | Accepted |
-| [ADR-004](./ADR-004-database-and-orm.md) | Database engine and data access | Accepted |
-| [ADR-005](./ADR-005-state-management.md) | Frontend state management | Accepted |
-| [ADR-006](./ADR-006-monorepo-and-tooling.md) | Repository layout and build tooling | Accepted |
-| [ADR-007](./ADR-007-shared-contracts.md) | Shared API contract package | Accepted |
-| [ADR-008](./ADR-008-authentication.md) | Authentication and token strategy | Accepted |
-| [ADR-009](./ADR-009-authorization-and-entitlements.md) | Authorization, roles and entitlements | Accepted |
-| [ADR-010](./ADR-010-mobile-and-offline-strategy.md) | Mobile packaging and offline capability | Accepted |
-| [ADR-011](./ADR-011-nutrition-data-source.md) | Nutrition data source | Accepted (with open legal question) |
-| [ADR-012](./ADR-012-testing-strategy.md) | Testing strategy and tooling | Accepted |
-| [ADR-013](./ADR-013-hosting-and-deployment.md) | Hosting, deployment and CI/CD | Accepted |
-| [ADR-014](./ADR-014-domain-model-conventions.md) | Domain model conventions | Accepted |
+| ADR                                                    | Decision                                | Status                              |
+| ------------------------------------------------------ | --------------------------------------- | ----------------------------------- |
+| [ADR-001](./ADR-001-frontend-framework-and-ui.md)      | Frontend framework, UI layer and forms  | Accepted                            |
+| [ADR-002](./ADR-002-backend-framework.md)              | Backend framework                       | Accepted                            |
+| [ADR-003](./ADR-003-api-style.md)                      | API style, versioning and error format  | Accepted                            |
+| [ADR-004](./ADR-004-database-and-orm.md)               | Database engine and data access         | Accepted                            |
+| [ADR-005](./ADR-005-state-management.md)               | Frontend state management               | Accepted                            |
+| [ADR-006](./ADR-006-monorepo-and-tooling.md)           | Repository layout and build tooling     | Accepted                            |
+| [ADR-007](./ADR-007-shared-contracts.md)               | Shared API contract package             | Accepted                            |
+| [ADR-008](./ADR-008-authentication.md)                 | Authentication and token strategy       | Accepted                            |
+| [ADR-009](./ADR-009-authorization-and-entitlements.md) | Authorization, roles and entitlements   | Accepted                            |
+| [ADR-010](./ADR-010-mobile-and-offline-strategy.md)    | Mobile packaging and offline capability | Accepted                            |
+| [ADR-011](./ADR-011-nutrition-data-source.md)          | Nutrition data source                   | Accepted (with open legal question) |
+| [ADR-012](./ADR-012-testing-strategy.md)               | Testing strategy and tooling            | Accepted                            |
+| [ADR-013](./ADR-013-hosting-and-deployment.md)         | Hosting, deployment and CI/CD           | Accepted                            |
+| [ADR-014](./ADR-014-domain-model-conventions.md)       | Domain model conventions                | Accepted                            |
 
 ## Template
 

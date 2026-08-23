@@ -1,0 +1,13 @@
+# Prettier is configured with endOfLine: lf, so the repository stores LF and
+# checkouts on Windows must not convert it to CRLF, or every file would be
+# reported as unformatted.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

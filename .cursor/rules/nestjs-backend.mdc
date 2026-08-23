@@ -21,6 +21,24 @@ Baseline: NestJS 11 on Fastify, modular monolith. See `docs/ADR/ADR-002-backend-
   `IdentityProvider`, `MailSender`. Do not wrap Prisma in an interface for a module with no domain
   logic.
 
+## Imports and dependency injection
+
+Nest resolves constructor dependencies from parameter type metadata emitted by
+`emitDecoratorMetadata`. Turning a value import into `import type` erases that metadata, so DI fails
+at runtime while the code still type-checks:
+
+```typescript
+// BAD - metadata is erased, Nest cannot resolve the dependency
+import type { SessionService } from './session.service';
+
+// GOOD - value import, metadata survives
+import { SessionService } from './session.service';
+```
+
+`@typescript-eslint/consistent-type-imports` is aware of this and skips classes carrying decorators,
+so it will not push you into the broken form. Do not apply its autofix to an injectable class that
+somehow lacks its decorator, and never set `emitDecoratorMetadata: false` in `apps/api`.
+
 ## Authorization
 
 ```typescript

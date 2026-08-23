@@ -9,11 +9,11 @@ statistics.
 
 ## Documentation
 
-| Document | What it covers |
-| --- | --- |
+| Document                                     | What it covers                                                                                                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The complete technical architecture: structure, frontend, backend, database, auth, state, API, testing, CI/CD, security, observability, scalability |
-| [docs/ADR/](docs/ADR/README.md) | Architecture Decision Records — what was decided, what else was considered, and why |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Ten delivery phases and the MVP scope, classified MUST / SHOULD / COULD / FUTURE |
+| [docs/ADR/](docs/ADR/README.md)              | Architecture Decision Records — what was decided, what else was considered, and why                                                                 |
+| [docs/ROADMAP.md](docs/ROADMAP.md)           | Ten delivery phases and the MVP scope, classified MUST / SHOULD / COULD / FUTURE                                                                    |
 
 Start with [ARCHITECTURE.md](docs/ARCHITECTURE.md). It links to the ADR for every decision it
 summarises.
@@ -43,8 +43,12 @@ apps/
 packages/
   contracts/    Zod schemas and inferred types, shared by web and api
   config/       Shared ESLint, Prettier and tsconfig bases
+tools/          Tests for the repository's own tooling
 docs/           Architecture, ADRs, roadmap
 ```
+
+Architectural import rules are enforced, not just documented. The policies live in
+`eslint.boundaries.mjs` and are themselves covered by tests in `tools/`.
 
 ## Architectural principles
 

@@ -33,7 +33,7 @@ right answer when the API has consumers you do not control or clients in other l
 here on the round trip: a code-generation step in the build, generated code in the repository or in
 `node_modules`, and a spec that is either hand-maintained (and therefore drifts) or generated from
 decorators (in which case the decorators are the real source of truth and the spec is a by-product).
-Note that we can still *emit* OpenAPI from the Zod schemas for documentation — the point is that it
+Note that we can still _emit_ OpenAPI from the Zod schemas for documentation — the point is that it
 is an output, not the input.
 
 **NestJS DTO classes with `class-validator`, and separate frontend interfaces.** The Nest-idiomatic

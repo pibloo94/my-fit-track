@@ -1,0 +1,23 @@
+{
+  // Correctness and strictness only. Module and target settings are deliberately
+  // NOT set here: the API emits CommonJS for Node while the web app is bundled,
+  // so a shared value would be wrong for one of them.
+  //
+  // Never use "moduleResolution": "node" (node10) in a project that extends this.
+  // It is deprecated in TypeScript 6 and removed in 7.
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": true
+  }
+}

@@ -39,7 +39,7 @@ directly, and it is another dependency with its own major-version cadence tracki
 hand-written stores start diverging in shape, this is the first thing to adopt.
 
 **TanStack Query for Angular.** The strongest option specifically for server state: mature caching,
-invalidation, deduplication, retry, background refetch. Rejected *for now* because Angular 22's
+invalidation, deduplication, retry, background refetch. Rejected _for now_ because Angular 22's
 `httpResource` covers the same ground for our access patterns, and adding a caching library before
 feeling a caching problem is speculative. It is the designated escalation.
 

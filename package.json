@@ -14,11 +14,19 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test:tooling && npm run test --workspaces --if-present",
+    "test:tooling": "vitest run"
   },
   "devDependencies": {
+    "@my-fit-track/config": "*",
     "@types/node": "^24.0.0",
-    "typescript": ">=6.0 <6.1"
+    "eslint": "^10.9.0",
+    "prettier": "^3.9.6",
+    "typescript": ">=6.0 <6.1",
+    "vitest": "^4.1.11"
   }
 }
