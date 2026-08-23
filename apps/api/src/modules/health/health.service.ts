@@ -1,12 +1,16 @@
 import { type HealthResponse } from '@my-fit-track/contracts';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+
+import { APP_CONFIG, type AppConfig } from '../../infrastructure/config/app-config';
 
 @Injectable()
 export class HealthService {
+  constructor(@Inject(APP_CONFIG) private readonly config: AppConfig) {}
+
   check(): HealthResponse {
     return {
       status: 'ok',
-      version: process.env['APP_VERSION'] ?? 'dev',
+      version: this.config.appVersion,
       uptimeSeconds: Math.round(process.uptime()),
       checkedAt: new Date().toISOString(),
     };

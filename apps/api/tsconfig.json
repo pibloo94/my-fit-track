@@ -1,20 +1,15 @@
 {
   "extends": "@my-fit-track/config/tsconfig.base.json",
   "compilerOptions": {
-    // CommonJS for Node. node16 resolution, never the legacy node10 resolver,
-    // which is deprecated in TypeScript 6 and removed in 7.
     "module": "node16",
     "moduleResolution": "node16",
     "target": "es2023",
     "lib": ["es2023"],
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": false,
-    // NestJS resolves constructor dependencies from emitted parameter type metadata.
+    "noEmit": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
-  // Written and removed by tools/boundaries.test.mjs; never part of the build.
+  "include": ["src/**/*.ts", "vitest.config.mts"],
   "exclude": ["src/**/__fixture_*__/**", "src/**/__fixture_*__.ts"]
 }

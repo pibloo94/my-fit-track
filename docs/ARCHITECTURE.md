@@ -841,9 +841,9 @@ Nest exception filter and consumed by one Angular interceptor:
   "status": 422,
   "detail": "One or more fields are invalid.",
   "instance": "/api/v1/workout-sessions",
-  "code": "VALIDATION_ERROR",
+  "code": "VALIDATION_FAILED",
   "traceId": "01J9…",
-  "errors": [{ "field": "sets[0].weightKg", "message": "must be greater than 0" }]
+  "errors": [{ "path": "sets[0].weightKg", "message": "must be greater than 0" }]
 }
 ```
 

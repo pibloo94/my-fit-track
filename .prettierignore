@@ -4,3 +4,4 @@ build/
 coverage/
 .angular/
 LICENSE
+.env.example
