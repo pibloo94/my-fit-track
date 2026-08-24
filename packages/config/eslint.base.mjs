@@ -15,6 +15,8 @@ export const ignores = [
   // behind by an interrupted test run cannot fail the real lint.
   '**/__fixture_*__/**',
   '**/__fixture_*__.ts',
+  '**/playwright-report/**',
+  '**/test-results/**',
 ];
 
 /**

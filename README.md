@@ -45,6 +45,7 @@ packages/
   contracts/    Zod schemas and inferred types, shared by web and api
   config/       Shared ESLint, Prettier and tsconfig bases
 tools/          Tests for the repository's own tooling
+e2e/            Playwright smoke tests (both apps, together)
 docs/           Architecture, ADRs, roadmap
 ```
 
@@ -64,6 +65,14 @@ npm run build
 `docker-compose.yml` starts PostgreSQL 17 only. Health is `GET /api/v1/health`: `ok` when the
 database answers, `degraded` when it does not. Without Docker, unit tests still run; the
 Testcontainers integration test skips.
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+The smoke test starts the API from `apps/api/dist` and the Angular dev server. Run `npm run build`
+first so the API exists.
 
 ## Architectural principles
 

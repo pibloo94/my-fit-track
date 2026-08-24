@@ -21,8 +21,9 @@ does not announce itself; it arrives as a reasonable-sounding addition to the ph
 
 **Goal:** an empty but complete, deployable, verified pipeline. No product features.
 
-**Progress as of 2026-08-24.** Resume with the Testcontainers proof (needs Docker Desktop), then
-Playwright smoke, GitHub Actions, and a staging deploy. Do not start phase 2.
+**Progress as of 2026-08-24.** Resume with Docker Desktop to prove Testcontainers locally, then a
+staging deploy (Cloudflare Pages + Railway). Branch protection on GitHub must still be turned on
+by hand. Do not start phase 2.
 
 Done:
 
@@ -44,12 +45,16 @@ Done:
   `MigrationProbe` model and a committed migration. `/health` pings the database (`ok` /
   `degraded`). Prisma 6 is used because the API is CommonJS; Prisma 7's client is ESM-first and
   needs a driver adapter — a separate upgrade.
+- Playwright smoke: the health page renders a payload from the API. In CI it runs against the
+  two apps plus a Postgres service, not a preview deployment (that waits on staging).
+- GitHub Actions pull request pipeline: typecheck, lint, format, unit tests, production build,
+  Testcontainers integration, Playwright smoke. Dependabot grouped monthly updates.
 
 Not done yet:
 
 - Testcontainers integration test **proven on this machine** (the test is written and skips when
-  Docker is missing). Playwright smoke test.
-- GitHub Actions PR pipeline and branch protection.
+  Docker is missing).
+- Branch protection requiring the CI checks.
 - Deploy empty apps to staging.
 
 **Build:**

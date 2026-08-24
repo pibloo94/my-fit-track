@@ -5,3 +5,5 @@ coverage/
 .angular/
 LICENSE
 .env.example
+playwright-report/
+test-results/
