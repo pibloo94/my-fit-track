@@ -3,7 +3,9 @@ import { z } from 'zod';
 import {
   type AppConfig,
   CAPACITOR_ORIGINS,
+  DEFAULT_DEV_DATABASE_URL,
   DEFAULT_DEV_ORIGINS,
+  DEFAULT_TEST_DATABASE_URL,
   type LogLevel,
   type NodeEnv,
 } from './app-config';
@@ -19,6 +21,7 @@ const envSchema = z
     APP_VERSION: z.string().min(1).default('dev'),
     LOG_LEVEL: logLevelSchema.default('info'),
     CORS_ORIGINS: z.string().optional(),
+    DATABASE_URL: z.string().min(1).optional(),
     RATE_LIMIT_TTL_MS: z.coerce.number().int().min(1000).default(60_000),
     RATE_LIMIT_LIMIT: z.coerce.number().int().min(1).default(120),
   })
@@ -32,6 +35,14 @@ const envSchema = z
         message: 'CORS_ORIGINS is required in production',
       });
     }
+
+    if (value.NODE_ENV === 'production' && !value.DATABASE_URL?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['DATABASE_URL'],
+        message: 'DATABASE_URL is required in production',
+      });
+    }
   });
 
 export class InvalidAppConfigError extends Error {
@@ -43,6 +54,15 @@ export class InvalidAppConfigError extends Error {
 
 function uniqueOrigins(origins: readonly string[]): string[] {
   return [...new Set(origins)];
+}
+
+function resolveDatabaseUrl(nodeEnv: NodeEnv, raw: string | undefined): string {
+  const trimmed = raw?.trim();
+  if (trimmed !== undefined && trimmed.length > 0) {
+    return trimmed;
+  }
+
+  return nodeEnv === 'test' ? DEFAULT_TEST_DATABASE_URL : DEFAULT_DEV_DATABASE_URL;
 }
 
 function resolveCorsOrigins(raw: string | undefined): string[] {
@@ -85,6 +105,7 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     appVersion: parsed.data.APP_VERSION,
     logLevel,
     corsOrigins: resolveCorsOrigins(parsed.data.CORS_ORIGINS),
+    databaseUrl: resolveDatabaseUrl(nodeEnv, parsed.data.DATABASE_URL),
     rateLimit: {
       ttlMs: parsed.data.RATE_LIMIT_TTL_MS,
       limit: parsed.data.RATE_LIMIT_LIMIT,

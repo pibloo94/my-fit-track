@@ -5,7 +5,8 @@ progression, diet, foods, recipes, calories and macronutrients, body measurement
 statistics.
 
 > **Status: phase 1.** The architecture is documented and the first vertical slice is in place: the
-> API serves `/api/v1/health` and the Angular app consumes it through `packages/contracts`.
+> API serves `/api/v1/health` (including a Postgres ping) and the Angular app consumes it through
+> `packages/contracts`. Local Postgres is Docker Compose; the API and web app run natively.
 
 ## Documentation
 
@@ -49,6 +50,20 @@ docs/           Architecture, ADRs, roadmap
 
 Architectural import rules are enforced, not just documented. The policies live in
 `eslint.boundaries.mjs` and are themselves covered by tests in `tools/`.
+
+## Local development
+
+```bash
+npm install
+cp apps/api/.env.example apps/api/.env
+npm run db:up
+npm run db:migrate
+npm run build
+```
+
+`docker-compose.yml` starts PostgreSQL 17 only. Health is `GET /api/v1/health`: `ok` when the
+database answers, `degraded` when it does not. Without Docker, unit tests still run; the
+Testcontainers integration test skips.
 
 ## Architectural principles
 

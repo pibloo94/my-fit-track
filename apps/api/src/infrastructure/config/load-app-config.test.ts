@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAPACITOR_ORIGINS, DEFAULT_DEV_ORIGINS } from './app-config';
+import {
+  CAPACITOR_ORIGINS,
+  DEFAULT_DEV_DATABASE_URL,
+  DEFAULT_DEV_ORIGINS,
+  DEFAULT_TEST_DATABASE_URL,
+} from './app-config';
 import { InvalidAppConfigError, loadAppConfig } from './load-app-config';
 
 describe('loadAppConfig', () => {
@@ -11,6 +16,7 @@ describe('loadAppConfig', () => {
     expect(config.appVersion).toBe('dev');
     expect(config.corsOrigins).toEqual([...DEFAULT_DEV_ORIGINS, ...CAPACITOR_ORIGINS]);
     expect(config.rateLimit).toEqual({ ttlMs: 60_000, limit: 120 });
+    expect(config.databaseUrl).toBe(DEFAULT_DEV_DATABASE_URL);
   });
 
   it('parses a comma-separated origin list and still keeps Capacitor origins', () => {
@@ -30,15 +36,32 @@ describe('loadAppConfig', () => {
     expect(() => loadAppConfig({ NODE_ENV: 'production' })).toThrow(InvalidAppConfigError);
   });
 
+  it('refuses to boot in production without DATABASE_URL', () => {
+    expect(() =>
+      loadAppConfig({
+        NODE_ENV: 'production',
+        CORS_ORIGINS: 'https://app.example.com',
+      }),
+    ).toThrow(InvalidAppConfigError);
+  });
+
+  it('uses a closed port in test so health checks fail fast without Docker', () => {
+    const config = loadAppConfig({ NODE_ENV: 'test' });
+
+    expect(config.databaseUrl).toBe(DEFAULT_TEST_DATABASE_URL);
+  });
+
   it('still allows the Capacitor wrapper when production names a web origin', () => {
     const config = loadAppConfig({
       NODE_ENV: 'production',
       CORS_ORIGINS: 'https://app.example.com',
+      DATABASE_URL: 'postgresql://app:secret@db:5432/myfittrack',
       APP_VERSION: '1.2.3',
     });
 
     expect(config.corsOrigins).toEqual(['https://app.example.com', ...CAPACITOR_ORIGINS]);
     expect(config.appVersion).toBe('1.2.3');
+    expect(config.databaseUrl).toBe('postgresql://app:secret@db:5432/myfittrack');
   });
 
   it('rejects a port that is not a TCP port', () => {

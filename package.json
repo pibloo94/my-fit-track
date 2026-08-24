@@ -21,7 +21,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm run contracts:build && npm run test:tooling && npm run test --workspaces --if-present",
-    "test:tooling": "vitest run"
+    "test:tooling": "vitest run",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate:deploy --workspace @my-fit-track/api",
+    "db:generate": "npm run prisma:generate --workspace @my-fit-track/api"
   },
   "devDependencies": {
     "@my-fit-track/config": "*",

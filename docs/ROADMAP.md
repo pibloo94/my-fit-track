@@ -21,8 +21,8 @@ does not announce itself; it arrives as a reasonable-sounding addition to the ph
 
 **Goal:** an empty but complete, deployable, verified pipeline. No product features.
 
-**Progress as of 2026-08-23.** Head is `2f46f25` on `main`. Resume with PostgreSQL + Prisma.
-Do not start phase 2.
+**Progress as of 2026-08-24.** Resume with the Testcontainers proof (needs Docker Desktop), then
+Playwright smoke, GitHub Actions, and a staging deploy. Do not start phase 2.
 
 Done:
 
@@ -40,11 +40,15 @@ Done:
   Frontend boundary rules are live.
 - Angular CLI refuses Node 24.11 (wants 24.15+). `apps/web/scripts/ng.cjs` skips that gate. Remove
   it after upgrading Node.
+- PostgreSQL 17 via `docker-compose.yml` (database only). Prisma 6 with a throwaway
+  `MigrationProbe` model and a committed migration. `/health` pings the database (`ok` /
+  `degraded`). Prisma 6 is used because the API is CommonJS; Prisma 7's client is ESM-first and
+  needs a driver adapter — a separate upgrade.
 
 Not done yet:
 
-- PostgreSQL via Docker Compose. Prisma with one throwaway model to prove migrations.
-- Testcontainers integration test. Playwright smoke test.
+- Testcontainers integration test **proven on this machine** (the test is written and skips when
+  Docker is missing). Playwright smoke test.
 - GitHub Actions PR pipeline and branch protection.
 - Deploy empty apps to staging.
 

@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { type AppConfig } from './infrastructure/config/app-config';
 import { AppConfigModule } from './infrastructure/config/app-config.module';
+import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({})
@@ -13,6 +14,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         AppConfigModule.forRoot(config),
+        PrismaModule,
         ThrottlerModule.forRoot({
           throttlers: [
             {

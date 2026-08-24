@@ -51,8 +51,10 @@ describe('HTTP application', () => {
     const body: unknown = response.json();
 
     expect(response.statusCode).toBe(200);
+    // HTTP tests do not start Postgres: the test default URL is a closed port, so
+    // health reports degraded. `ok` is asserted in the Testcontainers integration test.
     expect(healthResponseSchema.parse(body)).toMatchObject({
-      status: 'ok',
+      status: 'degraded',
       version: 'test-1.0.0',
     });
     expect(response.headers['x-request-id']).toEqual(expect.any(String));

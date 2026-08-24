@@ -1,0 +1,23 @@
+// Prisma 6 is used because the API emits CommonJS (Nest + TypeScript `module: node16`).
+// Prisma 7's rust-free client defaults to ESM and requires a driver adapter; that is a
+// separate upgrade, not part of proving the migration workflow.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Throwaway table. Exists only to prove `prisma migrate deploy` against PostgreSQL 17.
+/// It is not a domain model, is not user-owned (no `user_id`), and will be dropped when
+/// the first real table lands in phase 2.
+model MigrationProbe {
+  id        String   @id @default(uuid()) @db.Uuid
+  note      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("migration_probe")
+}
