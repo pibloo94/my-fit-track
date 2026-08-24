@@ -32,7 +32,7 @@ jobs:
       DATABASE_URL: postgresql://myfittrack:myfittrack@localhost:5432/myfittrack?schema=public
     steps:
       - name: Check out
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Node 24
         uses: actions/setup-node@v5
@@ -92,7 +92,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Build API image
         run: docker build -t my-fit-track-api:${{ github.sha }} --build-arg APP_VERSION=${{ github.sha }} .
@@ -122,7 +122,7 @@ jobs:
 
       - name: Check out
         if: steps.secrets.outputs.skip == 'false'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Download web bundle
         if: steps.secrets.outputs.skip == 'false'
