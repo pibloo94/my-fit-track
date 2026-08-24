@@ -21,9 +21,9 @@ does not announce itself; it arrives as a reasonable-sounding addition to the ph
 
 **Goal:** an empty but complete, deployable, verified pipeline. No product features.
 
-**Progress as of 2026-08-24.** Resume with Docker Desktop to prove Testcontainers locally, then a
-staging deploy (Cloudflare Pages + Railway). Branch protection on GitHub must still be turned on
-by hand. Do not start phase 2.
+**Progress as of 2026-08-24.** Resume by adding the GitHub `staging` secrets and creating the
+Railway + Cloudflare projects so the deploy job actually ships. Docker Desktop is still needed to
+prove Testcontainers locally. Branch protection is still a GitHub UI click. Do not start phase 2.
 
 Done:
 
@@ -49,13 +49,15 @@ Done:
   two apps plus a Postgres service, not a preview deployment (that waits on staging).
 - GitHub Actions pull request pipeline: typecheck, lint, format, unit tests, production build,
   Testcontainers integration, Playwright smoke. Dependabot grouped monthly updates.
+- API multi-stage Dockerfile; Railway `migrate deploy` then `node`. Web runtime `app-config.json`
+  for the API origin. Staging job on `main` deploys Cloudflare Pages + Railway when secrets exist.
 
 Not done yet:
 
 - Testcontainers integration test **proven on this machine** (the test is written and skips when
   Docker is missing).
 - Branch protection requiring the CI checks.
-- Deploy empty apps to staging.
+- Staging secrets and the first live Railway / Cloudflare deploy.
 
 **Build:**
 

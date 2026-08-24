@@ -13,3 +13,25 @@ export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG');
 export const defaultAppConfig: AppConfig = {
   apiBaseUrl: '',
 };
+
+export function parseRuntimeAppConfig(raw: unknown): AppConfig {
+  if (typeof raw !== 'object' || raw === null || !('apiBaseUrl' in raw)) {
+    return defaultAppConfig;
+  }
+
+  const apiBaseUrl = raw.apiBaseUrl;
+  if (typeof apiBaseUrl !== 'string') {
+    return defaultAppConfig;
+  }
+
+  const trimmed = apiBaseUrl.trim().replace(/\/$/, '');
+  if (trimmed === '') {
+    return defaultAppConfig;
+  }
+
+  if (!trimmed.startsWith('https://') && !trimmed.startsWith('http://')) {
+    return defaultAppConfig;
+  }
+
+  return { apiBaseUrl: trimmed };
+}

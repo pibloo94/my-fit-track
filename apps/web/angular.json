@@ -20,6 +20,10 @@
             "browser": "src/main.ts",
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
+            "outputPath": {
+              "base": "dist",
+              "browser": "browser"
+            },
             "assets": [
               {
                 "glob": "**/*",

@@ -74,6 +74,29 @@ npm run test:e2e
 The smoke test starts the API from `apps/api/dist` and the Angular dev server. Run `npm run build`
 first so the API exists.
 
+## Staging
+
+Staging deploys from `main` after CI is green. The API is a Docker image on Railway (EU Postgres,
+migrations in the container entrypoint). The web app is the Angular production bundle on Cloudflare
+Pages, pointed at the API through `app-config.json`.
+
+Create a GitHub Environment named `staging` and set:
+
+| Secret                  | What it is                                                             |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `RAILWAY_TOKEN`         | Railway project or account token                                       |
+| `RAILWAY_SERVICE`       | Optional. Railway service name. Defaults to `api`                      |
+| `CLOUDFLARE_API_TOKEN`  | Token with Pages deploy permission                                     |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                                  |
+| `STAGING_API_BASE_URL`  | Public API origin, no trailing slash (e.g. `https://….up.railway.app`) |
+
+On Railway, set `NODE_ENV=production`, `DATABASE_URL` (plugin), `CORS_ORIGINS` to the Pages origin,
+and `PORT` if the platform does not inject it. Without those GitHub secrets, the deploy job skips.
+
+```bash
+docker build -t my-fit-track-api --build-arg APP_VERSION=dev .
+```
+
 ## Architectural principles
 
 The design is guided by three ideas, explained in full in
