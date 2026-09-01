@@ -32,10 +32,10 @@
   "devDependencies": {
     "@my-fit-track/config": "*",
     "@playwright/test": "^1.55.0",
-    "@types/node": "^24.0.0",
-    "eslint": "^10.9.0",
+    "@types/node": "^26.4.0",
+    "eslint": "^10.9.1",
     "prettier": "^3.9.6",
-    "typescript": ">=6.0 <6.1",
+    "typescript": ">=6.0 <7.1",
     "vitest": "^4.1.11"
   }
 }
