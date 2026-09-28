@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node scripts/ng.cjs serve",
     "build": "node scripts/ng.cjs build",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p functions-test/tsconfig.json",
     "test": "node scripts/ng.cjs test --watch=false"
   },
   "dependencies": {

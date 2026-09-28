@@ -25,6 +25,8 @@ export const problemCodeSchema = z.enum([
   'RATE_LIMITED',
   'IDEMPOTENCY_KEY_REUSED',
   'INTERNAL_ERROR',
+  /** The API could not be reached, e.g. from the web proxy while the API is down. */
+  'SERVICE_UNAVAILABLE',
 ]);
 
 export type ProblemCode = z.infer<typeof problemCodeSchema>;

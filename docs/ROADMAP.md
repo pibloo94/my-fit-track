@@ -46,7 +46,8 @@ behind each one:
 
 **Progress as of 2026-09-28.** The code is complete. The Railway trial expired before the first
 deploy, so hosting moved to a zero-cost setup ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)).
-Resume by implementing that change in CI and running the first real deploy. Do not start phase 2
+That change is now in the code and CI. Resume with the one-time account setup in the README
+(Neon, Koyeb, Cloudflare Pages, GitHub secrets) and the first real deploy. Do not start phase 2
 before the deploy has succeeded.
 
 Done:
@@ -73,18 +74,20 @@ Done:
   two apps plus a Postgres service.
 - GitHub Actions pull request pipeline: typecheck, lint, format, unit tests, production build,
   Testcontainers integration, Playwright smoke. Dependabot grouped monthly updates.
-- API multi-stage Dockerfile. Web runtime `app-config.json` for the API origin.
+- API multi-stage Dockerfile. Web runtime `app-config.json`, left empty so the web app calls its
+  own origin.
+- Deploy moved to ADR-015: a Pages Function proxies `/api/*` (tested in
+  `apps/web/functions-test/`); migrations run from CI against Neon, not from the container
+  entrypoint; CI redeploys the Koyeb service and checks `/api/v1/health` through the Pages origin.
+  `railway.json` is gone.
+- `/api/v1/health/live`, a liveness path that touches nothing, for the Koyeb health check.
+- Rate limiting keys on the real client address: the proxy forwards `CF-Connecting-IP`, trusted
+  only with the shared `API_PROXY_SECRET`. Without it every user would share one bucket.
 
 Not done yet:
 
-- **Move the deploy to ADR-015:**
-  - Pages Function proxy in `apps/web/functions/` for `/api/*`, with `app-config.json` pointing at
-    the web app's own origin.
-  - Migrations run from CI against Neon instead of the container entrypoint.
-  - A Koyeb redeploy from CI replaces the Railway step; `railway.json` is removed.
-  - A liveness path that does not touch the database, for the Koyeb health check.
-  - README and secrets list updated.
-- The first live deploy, checked end to end through the Pages origin.
+- The one-time account setup and the first live deploy, checked end to end through the Pages
+  origin.
 - Branch protection requiring the CI checks.
 - A green CI run confirmed on GitHub. The Testcontainers test runs there; it skips on a machine
   without Docker.

@@ -22,6 +22,7 @@ const envSchema = z
     LOG_LEVEL: logLevelSchema.default('info'),
     CORS_ORIGINS: z.string().optional(),
     DATABASE_URL: z.string().min(1).optional(),
+    API_PROXY_SECRET: z.string().min(32).optional(),
     RATE_LIMIT_TTL_MS: z.coerce.number().int().min(1000).default(60_000),
     RATE_LIMIT_LIMIT: z.coerce.number().int().min(1).default(120),
   })
@@ -106,6 +107,7 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     logLevel,
     corsOrigins: resolveCorsOrigins(parsed.data.CORS_ORIGINS),
     databaseUrl: resolveDatabaseUrl(nodeEnv, parsed.data.DATABASE_URL),
+    proxySecret: parsed.data.API_PROXY_SECRET,
     rateLimit: {
       ttlMs: parsed.data.RATE_LIMIT_TTL_MS,
       limit: parsed.data.RATE_LIMIT_LIMIT,

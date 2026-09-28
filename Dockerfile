@@ -1,5 +1,6 @@
 # Build context is the repository root. This image is the API only; the web app
-# is static files on Cloudflare Pages. No Railway/Cloudflare SDKs in the image.
+# is static files on Cloudflare Pages. No platform SDKs in the image: it runs
+# unchanged on Koyeb today and anywhere else later (ADR-013, ADR-015).
 #
 #   docker build -t my-fit-track-api --build-arg APP_VERSION=dev .
 

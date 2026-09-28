@@ -76,7 +76,9 @@ applies.
 both live on shared public-suffix domains (`*.pages.dev`, `*.koyeb.app`), so they are different
 sites. Any cookie the API sets is then third-party and gets blocked or dropped, which rules out
 cookie authentication on web. A custom domain shared by both would also fix this, for about €10 a
-year. The proxy fixes it for free and keeps the API origin private to the Function.
+year. The proxy fixes it for free. The API origin stays reachable directly, because the native app
+will call it in phase 10; the proxy authenticates itself to the API with a shared secret only so
+that the forwarded client address can be trusted for rate limiting.
 
 **Rewrite the API for an edge or serverless runtime** (Cloudflare Workers, for example). This removes
 the cold-start problem at the root, but it replaces NestJS. That is exactly the reversal ADR-002 warns

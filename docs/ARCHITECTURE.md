@@ -1155,15 +1155,13 @@ Built:
 - PostgreSQL 17 through Docker Compose and Prisma 6, with one throwaway `MigrationProbe` model that
   proves the migration workflow. There is no domain schema yet.
 - Import boundaries enforced by ESLint and covered by tests in `tools/`.
-- The pull request pipeline described in [section 12](#12-cicd), and a deploy job written for
-  Railway.
+- The pull request pipeline described in [section 12](#12-cicd), and the zero-cost deploy of
+  [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md): the Pages `/api/*` proxy, migrations from CI,
+  a Koyeb redeploy, and a liveness path for the platform health check.
 
 Pending before phase 2:
 
-- Moving the deploy job and the web app to the zero-cost setup of
-  [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md): the Pages proxy, migrations from CI and a
-  Koyeb redeploy.
-- The first live deploy.
+- The one-time Neon, Koyeb and Cloudflare setup, and the first live deploy.
 - Branch protection on `main` that requires the CI checks.
 
 Not started, by design: authentication, internationalisation, domain modules, Signal Forms usage,

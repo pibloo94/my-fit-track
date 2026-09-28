@@ -16,6 +16,11 @@ export interface AppConfig {
   readonly logLevel: LogLevel;
   readonly corsOrigins: readonly string[];
   readonly databaseUrl: string;
+  /**
+   * Shared with the Cloudflare Pages proxy. When a request carries it, the proxy's
+   * forwarded client address is trusted for rate limiting. Unset means no proxy.
+   */
+  readonly proxySecret: string | undefined;
   readonly rateLimit: {
     readonly ttlMs: number;
     readonly limit: number;

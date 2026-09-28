@@ -19,3 +19,14 @@ export const healthResponseSchema = z.strictObject({
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+
+/**
+ * Process liveness only. It deliberately touches no dependency: the platform health
+ * check calls it every few seconds, and a database ping there would keep a
+ * scale-to-zero database awake permanently (ADR-015).
+ */
+export const livenessResponseSchema = z.strictObject({
+  status: z.literal('alive'),
+});
+
+export type LivenessResponse = z.infer<typeof livenessResponseSchema>;

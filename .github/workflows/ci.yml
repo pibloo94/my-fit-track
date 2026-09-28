@@ -102,19 +102,29 @@ jobs:
     needs: [check, image]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment: staging
+    # Zero-cost MVP hosting (ADR-015): Neon for Postgres, Koyeb for the API, and
+    # Cloudflare Pages for the web app plus the /api/* proxy Function.
+    env:
+      PAGES_PROJECT: my-fit-track-staging
     steps:
       - name: Check staging secrets
         id: secrets
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
+          KOYEB_API_ORIGIN: ${{ secrets.KOYEB_API_ORIGIN }}
+          API_PROXY_SECRET: ${{ secrets.API_PROXY_SECRET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          STAGING_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
         run: |
-          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$STAGING_API_BASE_URL" ]; then
-            echo "Staging secrets are not set. Skipping deploy. See README."
+          missing=""
+          for name in NEON_DATABASE_URL KOYEB_TOKEN KOYEB_API_ORIGIN API_PROXY_SECRET CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "$(printenv "$name")" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "Staging secrets missing:$missing. Skipping deploy. See README."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -124,6 +134,40 @@ jobs:
         if: steps.secrets.outputs.skip == 'false'
         uses: actions/checkout@v5
 
+      - name: Set up Node 24
+        if: steps.secrets.outputs.skip == 'false'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        if: steps.secrets.outputs.skip == 'false'
+        run: npm ci
+
+      # Before the new API version starts, and never from the container: a sleeping
+      # instance would re-run them on every wake. Migrations must stay backward
+      # compatible with the running release (ADR-013).
+      - name: Apply migrations to Neon
+        if: steps.secrets.outputs.skip == 'false'
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: npm run db:migrate
+
+      - name: Install Koyeb CLI
+        if: steps.secrets.outputs.skip == 'false'
+        uses: koyeb-community/koyeb-actions@v2
+        with:
+          api_token: ${{ secrets.KOYEB_TOKEN }}
+
+      # The Koyeb service builds the Dockerfile from main, with autodeploy switched off
+      # so that this job, not a push, decides when it runs: after the migrations.
+      - name: Redeploy API on Koyeb
+        if: steps.secrets.outputs.skip == 'false'
+        env:
+          KOYEB_SERVICE: ${{ secrets.KOYEB_SERVICE }}
+        run: koyeb service redeploy "${KOYEB_SERVICE:-my-fit-track/api}" --wait --wait-timeout 10m
+
       - name: Download web bundle
         if: steps.secrets.outputs.skip == 'false'
         uses: actions/download-artifact@v4
@@ -131,23 +175,32 @@ jobs:
           name: web-dist
           path: apps/web/dist/browser
 
-      - name: Point the web app at the staging API
+      - name: Configure the Pages proxy
         if: steps.secrets.outputs.skip == 'false'
-        env:
-          STAGING_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
-        run: |
-          node -e "const fs=require('node:fs'); const url=process.env.STAGING_API_BASE_URL; if(!url) throw new Error('STAGING_API_BASE_URL is empty'); fs.writeFileSync('apps/web/dist/browser/app-config.json', JSON.stringify({apiBaseUrl: url.replace(/\/$/, '')})+'\n')"
-
-      - name: Deploy web to Cloudflare Pages
-        if: steps.secrets.outputs.skip == 'false'
+        working-directory: apps/web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@4 pages deploy apps/web/dist/browser --project-name my-fit-track-staging --commit-dirty=true
+          KOYEB_API_ORIGIN: ${{ secrets.KOYEB_API_ORIGIN }}
+          API_PROXY_SECRET: ${{ secrets.API_PROXY_SECRET }}
+        run: |
+          printf '%s' "$KOYEB_API_ORIGIN" | npx --yes wrangler@4 pages secret put API_ORIGIN --project-name "$PAGES_PROJECT"
+          printf '%s' "$API_PROXY_SECRET" | npx --yes wrangler@4 pages secret put API_PROXY_SECRET --project-name "$PAGES_PROJECT"
 
-      - name: Deploy API to Railway
+      # Run from apps/web so wrangler picks up functions/ next to the bundle.
+      - name: Deploy web and proxy to Cloudflare Pages
         if: steps.secrets.outputs.skip == 'false'
+        working-directory: apps/web
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
-        run: npx --yes @railway/cli up --ci --service "${RAILWAY_SERVICE:-api}"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 pages deploy dist/browser --project-name "$PAGES_PROJECT" --branch main --commit-dirty=true
+
+      # End to end through the public origin: Pages, the proxy Function, the API and
+      # Neon. `ok` means every hop works; `degraded` means the database did not answer.
+      - name: Check health through the web origin
+        if: steps.secrets.outputs.skip == 'false'
+        run: |
+          body=$(curl -fsS --retry 5 --retry-delay 10 --retry-all-errors "https://${PAGES_PROJECT}.pages.dev/api/v1/health")
+          echo "$body"
+          echo "$body" | grep -q '"status":"ok"'

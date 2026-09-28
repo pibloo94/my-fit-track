@@ -1,7 +1,8 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 
+import { ClientIpThrottlerGuard } from './common/http/client-ip-throttler.guard';
 import { type AppConfig } from './infrastructure/config/app-config';
 import { AppConfigModule } from './infrastructure/config/app-config.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
@@ -26,7 +27,7 @@ export class AppModule {
         }),
         HealthModule,
       ],
-      providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+      providers: [{ provide: APP_GUARD, useClass: ClientIpThrottlerGuard }],
     };
   }
 }

@@ -1,5 +1,6 @@
 import {
   healthResponseSchema,
+  livenessResponseSchema,
   PROBLEM_CONTENT_TYPE,
   problemDetailsSchema,
 } from '@my-fit-track/contracts';
@@ -147,5 +148,57 @@ describe('HTTP application', () => {
     expect(second.statusCode).toBe(429);
     expect(problemDetailsSchema.parse(second.json()).code).toBe('RATE_LIMITED');
     expect(second.headers['content-type']).toContain(PROBLEM_CONTENT_TYPE);
+  });
+
+  it('answers liveness without touching the database or the rate limit', async () => {
+    const server = await createApp(loadAppConfig({ ...testEnv, RATE_LIMIT_LIMIT: '1' }));
+    app = server;
+
+    const responses = await Promise.all(
+      [1, 2, 3].map(() => server.inject({ method: 'GET', url: '/api/v1/health/live' })),
+    );
+
+    for (const response of responses) {
+      expect(response.statusCode).toBe(200);
+      expect(livenessResponseSchema.parse(response.json())).toEqual({ status: 'alive' });
+    }
+  });
+
+  describe('behind the Pages proxy', () => {
+    const proxySecret = 'p'.repeat(32);
+    const proxiedEnv = { ...testEnv, RATE_LIMIT_LIMIT: '1', API_PROXY_SECRET: proxySecret };
+
+    function healthFrom(server: NestFastifyApplication, clientIp: string, secret: string) {
+      return server.inject({
+        method: 'GET',
+        url: '/api/v1/health',
+        headers: { 'x-client-ip': clientIp, 'x-proxy-secret': secret },
+      });
+    }
+
+    it('rate-limits each forwarded client separately when the secret matches', async () => {
+      const server = await createApp(loadAppConfig(proxiedEnv));
+      app = server;
+
+      const first = await healthFrom(server, '203.0.113.1', proxySecret);
+      const second = await healthFrom(server, '203.0.113.2', proxySecret);
+      const repeat = await healthFrom(server, '203.0.113.1', proxySecret);
+
+      expect(first.statusCode).toBe(200);
+      expect(second.statusCode).toBe(200);
+      expect(repeat.statusCode).toBe(429);
+    });
+
+    it('ignores a forwarded client address without the right secret', async () => {
+      const server = await createApp(loadAppConfig(proxiedEnv));
+      app = server;
+
+      const first = await healthFrom(server, '203.0.113.1', 'wrong');
+      // A spoofed header must not buy a fresh bucket: both share the socket address.
+      const spoofed = await healthFrom(server, '203.0.113.2', 'wrong');
+
+      expect(first.statusCode).toBe(200);
+      expect(spoofed.statusCode).toBe(429);
+    });
   });
 });

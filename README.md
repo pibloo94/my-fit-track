@@ -86,9 +86,41 @@ CI is green ([ADR-015](docs/ADR/ADR-015-zero-cost-mvp-hosting.md)):
 - **API** — the Docker image on Koyeb's free instance (Frankfurt).
 - **Database** — Neon's free Postgres (Frankfurt). Migrations run from CI before the API redeploys.
 
-> The CI deploy job still targets Railway, whose trial expired. Moving it to the setup above is the
-> next task in [phase 1](docs/ROADMAP.md#phase-1--foundation); the list of GitHub secrets is
-> documented here when that lands. Until the secrets exist, the deploy job skips.
+The deploy job in `.github/workflows/ci.yml` applies migrations to Neon, redeploys the Koyeb
+service, deploys the web bundle and proxy to Pages, then checks `/api/v1/health` through the Pages
+origin. Until its secrets exist, it skips.
+
+### One-time setup
+
+1. **Neon** — create a project in **AWS Europe (Frankfurt)** with Postgres 17. Copy the **direct**
+   (not pooled) connection string.
+2. **Proxy secret** — generate one value, used by both Koyeb and Pages:
+   `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`.
+3. **Koyeb** — create a Web Service from this GitHub repository:
+   - Branch `main`, Dockerfile builder (`Dockerfile` at the repository root), **autodeploy off** —
+     CI triggers deploys after migrations.
+   - Free instance in Frankfurt. App `my-fit-track`, service `api`.
+   - Port `3000` (HTTP), health check **HTTP `/api/v1/health/live`**. Never point it at
+     `/api/v1/health`: that pings the database and would keep Neon awake all month.
+   - Environment: `NODE_ENV=production`, `PORT=3000`, `DATABASE_URL` (Neon, direct),
+     `CORS_ORIGINS=https://my-fit-track-staging.pages.dev`, `API_PROXY_SECRET`.
+4. **Cloudflare Pages** — create the project once:
+   `npx wrangler pages project create my-fit-track-staging --production-branch main`. Create an
+   API token with the _Cloudflare Pages: Edit_ permission.
+5. **GitHub** — create an Environment named `staging` with these secrets:
+
+| Secret                  | What it is                                                           |
+| ----------------------- | -------------------------------------------------------------------- |
+| `NEON_DATABASE_URL`     | Neon direct connection string, used to apply migrations              |
+| `KOYEB_TOKEN`           | Koyeb API token                                                      |
+| `KOYEB_SERVICE`         | Optional. `<app>/<service>` on Koyeb. Defaults to `my-fit-track/api` |
+| `KOYEB_API_ORIGIN`      | Public API origin, no trailing slash (e.g. `https://….koyeb.app`)    |
+| `API_PROXY_SECRET`      | The value from step 2, identical to the one set on Koyeb             |
+| `CLOUDFLARE_API_TOKEN`  | The token from step 4                                                |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                                |
+
+The web app calls the API on its own origin (`app-config.json` keeps `apiBaseUrl` empty), and the
+Function reads `API_ORIGIN` and `API_PROXY_SECRET`, which the deploy job sets on the Pages project.
 
 ```bash
 docker build -t my-fit-track-api --build-arg APP_VERSION=dev .

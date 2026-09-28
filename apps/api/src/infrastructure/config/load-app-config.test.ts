@@ -45,6 +45,16 @@ describe('loadAppConfig', () => {
     ).toThrow(InvalidAppConfigError);
   });
 
+  it('reads an optional proxy secret and rejects one too short to be a secret', () => {
+    expect(loadAppConfig({ NODE_ENV: 'development' }).proxySecret).toBeUndefined();
+    expect(
+      loadAppConfig({ NODE_ENV: 'development', API_PROXY_SECRET: 's'.repeat(32) }).proxySecret,
+    ).toBe('s'.repeat(32));
+    expect(() => loadAppConfig({ NODE_ENV: 'development', API_PROXY_SECRET: 'short' })).toThrow(
+      InvalidAppConfigError,
+    );
+  });
+
   it('uses a closed port in test so health checks fail fast without Docker', () => {
     const config = loadAppConfig({ NODE_ENV: 'test' });
 

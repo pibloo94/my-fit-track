@@ -35,6 +35,7 @@ const CODE_TITLES: Record<ProblemCode, string> = {
   RATE_LIMITED: 'Too many requests',
   IDEMPOTENCY_KEY_REUSED: 'Idempotency key reused',
   INTERNAL_ERROR: 'Internal server error',
+  SERVICE_UNAVAILABLE: 'Service unavailable',
 };
 
 function problemType(code: ProblemCode): string {

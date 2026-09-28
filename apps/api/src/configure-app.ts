@@ -1,6 +1,7 @@
 import helmet from '@fastify/helmet';
 import { type NestFastifyApplication } from '@nestjs/platform-fastify';
 
+import { attachClientIp } from './common/http/client-ip';
 import { ProblemDetailsFilter } from './common/http/problem-details.filter';
 import { type AppConfig } from './infrastructure/config/app-config';
 import { attachRequestContext } from './infrastructure/logging/request-id';
@@ -24,12 +25,13 @@ export async function configureApp(app: NestFastifyApplication, config: AppConfi
     // Fastify v5 allows only the CORS safelist by default; mutating methods
     // have to be named or PATCH/PUT/DELETE preflights fail.
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Request-Id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     exposedHeaders: ['X-Request-Id'],
     credentials: true,
   });
 
   app.useGlobalFilters(new ProblemDetailsFilter());
   attachRequestContext(app);
+  attachClientIp(app, config.proxySecret);
   app.enableShutdownHooks();
 }
