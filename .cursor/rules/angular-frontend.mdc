@@ -33,8 +33,8 @@ readonly total = computed(() => this.items().reduce((a, i) => a + i.kcal, 0));
 - Fetch through `httpResource`/`resource` in the feature's `data-access`, held by the feature store.
 - After a successful mutation, **invalidate the resource**. Never hand-patch a local array — that is
   how a list and its detail view start disagreeing.
-- Session state (current user, role, entitlements, token) lives **only** in `core/auth`. Never copy
-  it into a feature store.
+- Session state (current user, role) lives **only** in `core/auth`. Never copy it into a feature
+  store. The web app never handles a session token: the browser holds it in an `HttpOnly` cookie.
 
 ## Feature structure
 
@@ -45,6 +45,16 @@ readonly total = computed(() => this.items().reduce((a, i) => a + i.kcal, 0));
 - `pages/` compose `ui` with the store.
 - Mappers in `data-access/` convert DTO to domain model: parse dates, convert units. No component
   ever parses a date string.
+
+## Internationalisation
+
+Spanish and English, with `@angular/localize` (`docs/ADR/ADR-018-internationalisation.md`).
+
+- Every user-facing string has an `i18n` marker or `$localize`, with an explicit `@@id`. No
+  hard-coded copy, not even "temporarily".
+- Errors are shown by problem `code`, never by displaying the server's `detail`.
+- Dates, numbers and units go through Angular's locale-aware pipes and the unit mappers.
+- A feature is done when both locales are.
 
 ## Forms and UI
 

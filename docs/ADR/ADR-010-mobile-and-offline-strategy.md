@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-23
 - Related: [ADR-001](./ADR-001-frontend-framework-and-ui.md), [ADR-003](./ADR-003-api-style.md), [ADR-008](./ADR-008-authentication.md)
+- Amended 2026-09-28: the outbox deduplicates through client-generated identifiers ([ADR-017](./ADR-017-client-generated-identifiers.md)), and native token storage holds a session token ([ADR-016](./ADR-016-opaque-server-sessions.md))
 
 ## Context
 

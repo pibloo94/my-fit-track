@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-23
 - Related: [ADR-002](./ADR-002-backend-framework.md), [ADR-007](./ADR-007-shared-contracts.md), [ADR-010](./ADR-010-mobile-and-offline-strategy.md)
+- Amended 2026-09-28: idempotent creation uses client-generated identifiers instead of `Idempotency-Key`, see [ADR-017](./ADR-017-client-generated-identifiers.md)
 
 ## Context
 

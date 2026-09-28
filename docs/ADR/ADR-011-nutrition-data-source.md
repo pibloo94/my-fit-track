@@ -3,6 +3,7 @@
 - Status: Accepted, with an open legal question
 - Date: 2026-08-23
 - Related: [ADR-004](./ADR-004-database-and-orm.md), [ADR-014](./ADR-014-domain-model-conventions.md)
+- Amended 2026-09-28: the MVP ships user-authored foods and quick-add only. The provider port and the first adapter are built after the MVP, see [ROADMAP.md](../ROADMAP.md)
 
 ## Context
 

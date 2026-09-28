@@ -1,7 +1,8 @@
 # My Fit Tracker — Technical Architecture
 
-> Status: proposed, not yet implemented. No application code exists at the time of writing.
-> Last reviewed: 2026-08-23. Target versions: Angular 22.1.x, NestJS 11.2.x, PostgreSQL 17, Node 24 LTS.
+> Status: accepted; phase 1 (foundation) implemented, product features not started. See
+> [Implementation status](#implementation-status).
+> Last reviewed: 2026-09-28. Target versions: Angular 22.1.x, NestJS 11.2.x, PostgreSQL 17, Node 24 LTS.
 
 This document is the single source of architectural truth for the project. Individual decisions
 are recorded as ADRs under [docs/ADR](./ADR/README.md); this document explains how they fit
@@ -63,11 +64,12 @@ are enforced by ESLint, contracts by Zod schemas validated at runtime, and archi
 
 ### Current state of the repository
 
-At the time of writing the repository contains only `.gitignore`, `LICENSE` and `README.md`.
-There is no `package.json`, no Angular workspace and no backend. Everything in this document is
-greenfield, which means there is no migration cost and no architectural debt to unwind — only the
-`.gitignore`, which was written for a single Angular project at the repository root and is
-corrected as part of this work.
+This document was written before any application code existed, so it describes the target
+architecture rather than a snapshot of the code. Phase 1 has since built the empty but complete
+skeleton: both applications, the contract package, the database and the CI pipeline, with a single
+health endpoint as the only feature. What is built and what is still pending is tracked in
+[Implementation status](#implementation-status) and, in more detail, in
+[ROADMAP.md](./ROADMAP.md#phase-1--foundation).
 
 ---
 
@@ -76,25 +78,27 @@ corrected as part of this work.
 Every entry links to the ADR containing the full alternatives comparison, trade-offs and
 consequences. The table is a summary, not the justification.
 
-| Concern            | Choice                                        | ADR                                                        |
-| ------------------ | --------------------------------------------- | ---------------------------------------------------------- |
-| Repository layout  | Single repo, npm workspaces, no Nx            | [ADR-006](./ADR/ADR-006-monorepo-and-tooling.md)           |
-| Frontend framework | Angular 22, standalone, signals-first         | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
-| UI layer           | Tailwind CSS + Angular CDK, no Material       | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
-| Forms              | Signal Forms with shared Zod schemas          | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)      |
-| Backend framework  | NestJS 11 + Fastify adapter                   | [ADR-002](./ADR/ADR-002-backend-framework.md)              |
-| API style          | REST, URI-versioned, RFC 9457 errors          | [ADR-003](./ADR/ADR-003-api-style.md)                      |
-| Database           | PostgreSQL                                    | [ADR-004](./ADR/ADR-004-database-and-orm.md)               |
-| ORM                | Prisma, with raw SQL escape hatch             | [ADR-004](./ADR/ADR-004-database-and-orm.md)               |
-| Frontend state     | Signals + feature stores, no NgRx             | [ADR-005](./ADR/ADR-005-state-management.md)               |
-| Shared contract    | `packages/contracts` with Zod                 | [ADR-007](./ADR/ADR-007-shared-contracts.md)               |
-| Authentication     | Self-hosted JWT + rotating refresh tokens     | [ADR-008](./ADR/ADR-008-authentication.md)                 |
-| Authorization      | Role + entitlement + quota, separated         | [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md) |
-| Mobile & offline   | Capacitor, PWA with a workout outbox          | [ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)    |
-| Food data          | Provider port, external catalogue             | [ADR-011](./ADR/ADR-011-nutrition-data-source.md)          |
-| Testing            | Vitest, Testcontainers, Playwright            | [ADR-012](./ADR/ADR-012-testing-strategy.md)               |
-| Hosting            | Static CDN + container API + managed Postgres | [ADR-013](./ADR/ADR-013-hosting-and-deployment.md)         |
-| Domain conventions | SI units, local dates, historical snapshots   | [ADR-014](./ADR/ADR-014-domain-model-conventions.md)       |
+| Concern              | Choice                                        | ADR                                                                                                                           |
+| -------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Repository layout    | Single repo, npm workspaces, no Nx            | [ADR-006](./ADR/ADR-006-monorepo-and-tooling.md)                                                                              |
+| Frontend framework   | Angular 22, standalone, signals-first         | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)                                                                         |
+| UI layer             | Tailwind CSS + Angular CDK, no Material       | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)                                                                         |
+| Forms                | Signal Forms with shared Zod schemas          | [ADR-001](./ADR/ADR-001-frontend-framework-and-ui.md)                                                                         |
+| Backend framework    | NestJS 11 + Fastify adapter                   | [ADR-002](./ADR/ADR-002-backend-framework.md)                                                                                 |
+| API style            | REST, URI-versioned, RFC 9457 errors          | [ADR-003](./ADR/ADR-003-api-style.md)                                                                                         |
+| Database             | PostgreSQL                                    | [ADR-004](./ADR/ADR-004-database-and-orm.md)                                                                                  |
+| ORM                  | Prisma, with raw SQL escape hatch             | [ADR-004](./ADR/ADR-004-database-and-orm.md)                                                                                  |
+| Frontend state       | Signals + feature stores, no NgRx             | [ADR-005](./ADR/ADR-005-state-management.md)                                                                                  |
+| Shared contract      | `packages/contracts` with Zod                 | [ADR-007](./ADR/ADR-007-shared-contracts.md)                                                                                  |
+| Authentication       | Self-hosted, opaque server-side sessions      | [ADR-016](./ADR/ADR-016-opaque-server-sessions.md) (supersedes part of [ADR-008](./ADR/ADR-008-authentication.md))            |
+| Authorization        | Role + entitlement + quota, separated         | [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md)                                                                    |
+| Mobile & offline     | Capacitor, PWA with a workout outbox          | [ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)                                                                       |
+| Food data            | Provider port, external catalogue             | [ADR-011](./ADR/ADR-011-nutrition-data-source.md)                                                                             |
+| Testing              | Vitest, Testcontainers, Playwright            | [ADR-012](./ADR/ADR-012-testing-strategy.md)                                                                                  |
+| Hosting              | Static CDN + container API + managed Postgres | [ADR-013](./ADR/ADR-013-hosting-and-deployment.md); MVP on zero-cost tiers, [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md) |
+| Idempotency          | Client-generated ids on creation              | [ADR-017](./ADR/ADR-017-client-generated-identifiers.md)                                                                      |
+| Internationalisation | Spanish and English; `@angular/localize`      | [ADR-018](./ADR/ADR-018-internationalisation.md)                                                                              |
+| Domain conventions   | SI units, local dates, historical snapshots   | [ADR-014](./ADR/ADR-014-domain-model-conventions.md)                                                                          |
 
 ### Explicitly rejected
 
@@ -136,9 +140,9 @@ graph TB
   FoodApi["External food catalogue"]
   Mail["Transactional email provider"]
 
-  Web --> CDN
-  Web -->|"REST /api/v1 with access JWT"| ApiLayer
-  Native -->|"REST /api/v1 with access JWT"| ApiLayer
+  Web -->|"static files and /api/* on one origin"| CDN
+  CDN -->|"proxied REST /api/v1, session cookie"| ApiLayer
+  Native -->|"REST /api/v1, session token as bearer"| ApiLayer
   ApiLayer --> AppLayer
   AppLayer --> DomainLayer
   AppLayer --> InfraLayer
@@ -155,45 +159,40 @@ the mechanism that keeps frontend and backend from drifting apart. See
 
 ### 3.2 Authentication flow
 
-Login and refresh-token rotation. The storage target for the refresh token differs by platform,
-which is a direct consequence of shipping a Capacitor build — see
-[section 8](#8-authentication).
+Login and an authenticated request on the web. The browser only talks to the Pages origin, which
+forwards `/api/*` to the API, so the session cookie is first-party. See
+[section 8](#8-authentication) and [ADR-016](./ADR/ADR-016-opaque-server-sessions.md).
 
 ```mermaid
 sequenceDiagram
   participant U as User
   participant A as Angular app
-  participant S as TokenStorage port
+  participant P as Pages proxy
   participant API as NestJS API
   participant DB as PostgreSQL
 
   U->>A: Submits email and password
-  A->>API: POST /api/v1/auth/login
+  A->>P: POST /api/v1/auth/login
+  P->>API: Forwarded unchanged
   API->>DB: Find user, verify Argon2id hash
-  DB-->>API: User record
-  API->>DB: Store hashed refresh token with family id
-  API-->>A: Access JWT in body, refresh token per platform
-  A->>S: Persist refresh token (cookie on web, secure store on native)
-  A->>A: Keep access JWT in memory only
+  API->>DB: Store SHA-256 hash of a new random session token
+  API-->>A: Set-Cookie __Host-session (HttpOnly, Secure, SameSite=Strict)
 
-  Note over A,API: Access token expires after 15 minutes
-
-  A->>API: GET /api/v1/workout-sessions with expired token
-  API-->>A: 401 with problem+json
-  A->>API: POST /api/v1/auth/refresh
-  API->>DB: Look up token, check not already used
-  alt Token valid and unused
-    API->>DB: Mark old token used, store new token in same family
-    API-->>A: New access JWT and new refresh token
-  else Token already used (replay detected)
-    API->>DB: Revoke entire token family
-    API-->>A: 401, full re-authentication required
+  A->>P: GET /api/v1/workout-sessions (cookie sent by the browser)
+  P->>API: Forwarded unchanged
+  API->>DB: Look up session by token hash, join user
+  alt Session valid
+    API->>DB: Extend expiry, at most once an hour
+    API-->>A: 200 with data
+  else Missing, expired or revoked
+    API-->>A: 401 with problem+json
+    A->>A: Clear session signal, route to login
   end
 ```
 
-Refresh tokens are rotated on every use and stored hashed. Reuse of an already-consumed token is
-treated as theft and revokes the whole family, which is what makes rotation worth implementing at
-all. Access tokens are never persisted to disk.
+The token never reaches JavaScript on the web. Revocation is deleting the row, so logout, "log out
+everywhere" and a password reset take effect on the next request. On native (phase 10), the same
+token is kept in OS secure storage and sent as `Authorization: Bearer`.
 
 ### 3.3 Request flow through the layers
 
@@ -239,7 +238,8 @@ Prisma; it receives and returns plain objects, which is what makes it testable w
 
 ### 3.4 Core domain relationships
 
-Conceptual model only. No tables are created at this stage; see
+Conceptual model only. None of these tables exist yet — each is created by the phase that needs it
+(the only table today is phase 1's throwaway `MigrationProbe`); see
 [section 7](#7-database) for the reasoning behind the shape.
 
 ```mermaid
@@ -255,8 +255,7 @@ erDiagram
   Exercise ||--o{ PersonalRecord : "tracked for"
 
   User ||--o{ Routine : owns
-  Routine ||--o{ RoutineDay : contains
-  RoutineDay ||--o{ RoutineExercise : prescribes
+  Routine ||--o{ RoutineExercise : prescribes
 
   User ||--o{ WorkoutSession : performs
   Routine ||--o{ WorkoutSession : "may originate"
@@ -280,6 +279,9 @@ erDiagram
   User ||--o{ HabitDefinition : defines
   HabitDefinition ||--o{ HabitLog : "logged as"
 ```
+
+A training "day" is a routine of its own; grouping routines into a program is deferred.
+`Subscription` arrives in phase 9 and `Food` is user-authored only until the catalogue in phase 7.
 
 The single most important relationship in this diagram is the separation of `Routine`
 (what was planned) from `WorkoutSession` (what actually happened). Collapsing them is the most
@@ -333,8 +335,8 @@ are applied during development rather than rediscovered in review.
 apps/web/src/
 ├── app/
 │   ├── core/                      Cross-cutting, instantiated once, no feature knowledge
-│   │   ├── auth/                  Session service, token storage port and adapters, guards
-│   │   ├── http/                  Interceptors: auth header, refresh, error mapping, retry
+│   │   ├── auth/                  Current-user signal, guards; native token storage in phase 10
+│   │   ├── http/                  Interceptors: 401 handling, error mapping, retry
 │   │   ├── error/                 Global error handler, typed AppError, user-facing mapping
 │   │   ├── config/                Environment and runtime configuration
 │   │   └── platform/              Platform detection, native adapters, storage abstractions
@@ -461,8 +463,8 @@ A single pipeline, so that no component invents its own:
 
 1. An HTTP interceptor catches failures and maps RFC 9457 `problem+json` responses into a typed
    `AppError` with a stable `code`, a user-safe message and the original field errors.
-2. `401` triggers exactly one refresh attempt, with concurrent requests queued behind it. A second
-   failure clears the session and routes to login.
+2. `401` clears the session state and routes to login. There is no token refresh: the session is
+   server-side and extended by the API itself ([ADR-016](./ADR/ADR-016-opaque-server-sessions.md)).
 3. Expected domain errors (`409` conflict, `422` validation) are returned to the calling store,
    which surfaces them in the UI. They are not logged as incidents.
 4. Unexpected errors reach a global `ErrorHandler`, which shows a non-blocking notification and, in
@@ -502,7 +504,7 @@ API is deployed as a long-lived container, not as a per-request serverless funct
 ```
 apps/api/src/
 ├── modules/
-│   ├── auth/                      Login, refresh, password reset, later OIDC
+│   ├── auth/                      Sessions, invitations, password reset, later OIDC
 │   ├── users/                     Identity, profile, preferences, goals, GDPR export/delete
 │   ├── exercises/                 Exercise catalogue, global and user-authored
 │   ├── routines/                  Training plans (prescription)
@@ -510,7 +512,7 @@ apps/api/src/
 │   ├── nutrition/                 Foods, recipes, diary entries, targets
 │   ├── progress/                  Measurements, personal records, derived statistics
 │   ├── habits/
-│   └── billing/                   Plans and entitlements; no payment provider yet
+│   └── billing/                   Plans and entitlements, from phase 9
 ├── common/                        Filters, guards, interceptors, pipes, decorators
 ├── infrastructure/
 │   ├── prisma/                    Client, transactions, migrations access
@@ -547,7 +549,7 @@ nothing from Nest, Prisma or HTTP.
 
 **Ports exist only where there is a second implementation or a real seam**, specifically:
 `FoodCatalogueProvider` (external data source, deliberately swappable — see
-[ADR-011](./ADR/ADR-011-nutrition-data-source.md)), `TokenStorage` on the client, `IdentityProvider`
+[ADR-011](./ADR/ADR-011-nutrition-data-source.md)), `SessionTokenStorage` on the native client, `IdentityProvider`
 (so a managed identity provider can replace self-hosted auth without touching the domain), and
 `MailSender`. Wrapping Prisma in a repository interface for a module that has no domain logic buys
 nothing and is not done.
@@ -595,7 +597,7 @@ These are the modelling rules that matter more than the exact column list. Each 
 violating it produces a bug that is expensive to fix after launch. Full reasoning in
 [ADR-014](./ADR/ADR-014-domain-model-conventions.md).
 
-**Prescription is separate from execution.** `Routine`, `RoutineDay` and `RoutineExercise` describe
+**Prescription is separate from execution.** `Routine` and `RoutineExercise` describe
 a plan. `WorkoutSession`, `SessionExercise` and `SetEntry` describe what happened. A session may
 reference the routine it came from, but it never depends on it: editing next month's plan must not
 rewrite last month's history.
@@ -638,60 +640,41 @@ after being merged.
 
 ### Strategy
 
-Self-hosted authentication in the `auth` module, designed so that a managed identity provider can
-replace it without touching the domain. Email and password first; Google and Apple sign-in added
-later through OAuth 2.0 Authorization Code with PKCE, behind the same `IdentityProvider` port.
+Self-hosted authentication in the `auth` module, with **opaque server-side sessions**. Email and
+password first. Google and Apple sign-in are added later through OAuth 2.0 Authorization Code with
+PKCE, behind an `IdentityProvider` port. See [ADR-016](./ADR/ADR-016-opaque-server-sessions.md),
+which supersedes the JWT-and-refresh-token design of [ADR-008](./ADR/ADR-008-authentication.md).
 
-The risk is stated plainly: hand-rolled authentication is the single most common source of serious
-security defects in solo-developer products. It is chosen here because user identity is
-inseparable from the domain data of a product intended for sale, and because the per-user cost of a
-hosted provider compounds. It is mitigated by using vetted libraries rather than custom
-cryptography (Argon2id for password hashing, Passport for flow plumbing), by keeping the provider
-behind a port, and by treating the token lifecycle rules below as non-negotiable. See
-[ADR-008](./ADR/ADR-008-authentication.md).
+The risk is stated plainly: hand-rolled authentication is the most common source of serious security
+defects in solo-developer products. Sessions were chosen over JWTs specifically to shrink that
+surface. There is one token type, no rotation, no refresh race and no stale claims. The rest is
+mitigated by using vetted primitives rather than custom cryptography: Argon2id for passwords, a
+CSPRNG for tokens.
 
-### Token design
+### Session design
 
-- **Access token**: JWT, 15-minute lifetime, contains `sub`, `role`, entitlement claims and
-  `jti`. Sent as `Authorization: Bearer`. Never written to disk — memory only, in a service, not in
-  `localStorage` or `sessionStorage`, because anything readable by JavaScript is readable by an XSS
-  payload.
-- **Refresh token**: opaque random value, 30-day lifetime, stored **hashed** server-side with a
-  family identifier. Rotated on every use. Reuse of a consumed token revokes the entire family and
-  forces re-authentication. Server-side storage is what makes revocation, "log out everywhere" and
-  a device list possible at all.
+- **Token:** 32 random bytes, base64url, issued at login. Only its SHA-256 hash is stored in
+  `sessions`, next to `user_id`, `expires_at` and `last_used_at`.
+- **Lifetime:** 30 days of inactivity and 90 days absolute. The expiry is extended at most once an
+  hour.
+- **Lookup:** every authenticated request finds the session by hash and joins the user and role.
+  Revocation — logout, "log out everywhere", password reset, account deletion — deletes rows and
+  takes effect on the next request.
+- **Registration is by invitation** during the closed beta. The invitation is bound to an email
+  address, which is why email verification can wait until registration opens in phase 10.
 
-### Platform-dependent storage — the consequence of shipping Capacitor
+### Transport by platform
 
-This is the part that a generic "use HttpOnly cookies" answer gets wrong.
+| Platform             | Token location                                                       | Sent as                 |
+| -------------------- | -------------------------------------------------------------------- | ----------------------- |
+| Browser              | `__Host-session` cookie: `HttpOnly; Secure; SameSite=Strict; Path=/` | Cookie, same origin     |
+| Capacitor (phase 10) | OS secure storage: iOS Keychain, Android Keystore                    | `Authorization: Bearer` |
 
-On the **web**, the refresh token is delivered as an `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`
-cookie. It is unreadable by JavaScript, scoped to the only endpoint that needs it, and `SameSite=Strict`
-neutralises cross-site request forgery for the refresh call itself.
-
-In a **Capacitor** build the page origin is `capacitor://localhost` (iOS) or `https://localhost`
-(Android), while the API lives on a real domain. That makes the cookie cross-site, and modern
-platform cookie policies make cross-site cookies in an embedded WebView unreliable — depending on
-the OS version they may be silently dropped. Relying on cookies there would produce an
-intermittently broken login on mobile, which is exactly the kind of defect that is discovered late.
-
-Therefore the client defines a `TokenStorage` port with two adapters, selected at bootstrap by
-platform:
-
-| Platform  | Refresh token location                             | Access token |
-| --------- | -------------------------------------------------- | ------------ |
-| Browser   | `HttpOnly` cookie, set and read only by the server | In memory    |
-| Capacitor | OS secure storage: iOS Keychain, Android Keystore  | In memory    |
-
-`@capacitor/preferences` is explicitly **not** acceptable for tokens — it is unencrypted
-`UserDefaults`/`SharedPreferences`. A dedicated secure-storage plugin is required.
-
-The API accepts the refresh token from either the cookie or an explicit request body field, and the
-choice of transport is a client concern. Designing this seam now costs one interface; discovering
-it after the mobile app ships costs an authentication rewrite. See
-[ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md).
-
----
+The cookie works on the web only because the web app and the API share an origin: Cloudflare Pages
+forwards `/api/*` to the API ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)). In a Capacitor
+WebView, a cookie to a real API domain would be cross-site and unreliable. That is why native sends
+the same token as a header instead. `@capacitor/preferences` is **not** acceptable for the token —
+it is unencrypted. A dedicated secure-storage plugin is required.
 
 ## 9. State management
 
@@ -725,7 +708,7 @@ by hand — hand-patching is how a list and its detail view start disagreeing.
 inputs before submission. Lives in `signal()` fields on the component that owns it. It is promoted
 to a store only when a second component genuinely needs it, never pre-emptively.
 
-**Session state** — the authenticated user, role, entitlements, access token. Lives in exactly one
+**Session state** — the authenticated user and role (entitlements from phase 9). Lives in exactly one
 place, `core/auth`, exposed as read-only signals. Every consumer reads from it; nobody copies it
 into a feature store, because two sources of truth for "who is logged in" is a security bug waiting
 to happen.
@@ -850,11 +833,18 @@ Nest exception filter and consumed by one Angular interceptor:
 A stable machine-readable `code` is included alongside the RFC fields because clients should branch
 on a code, not parse prose. `traceId` ties the response to server logs.
 
-**Idempotency.** Mutating requests accept an `Idempotency-Key` header; the server stores the key
-with its response for 24 hours and replays it on retry. This is not optional polish — it is what
-makes the offline workout outbox safe
-([ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)). Without it, a retry after a timeout
-silently duplicates logged sets.
+**Idempotency.** Resources that the client may create offline carry a **client-generated UUIDv7
+`id`**. The server inserts with `ON CONFLICT DO NOTHING` and returns the stored row, so a retried
+create returns the same `201` and never a duplicate. Updates set absolute values, and a retried
+delete treats `404` as done. This is not optional polish — it is what makes the offline workout
+outbox safe ([ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)). Without it, a retry after a
+timeout silently duplicates logged sets. The general `Idempotency-Key` mechanism is reserved for the
+first operation that is not naturally idempotent
+([ADR-017](./ADR/ADR-017-client-generated-identifiers.md)).
+
+**Language.** The API resolves a locale from the user's preference, then `Accept-Language`, and
+returns catalogue names in that locale only. Error `title` and `detail` stay English; clients
+translate by `code` ([ADR-018](./ADR/ADR-018-internationalisation.md)).
 
 **Validation.** Every request body, query and path parameter is parsed by the Zod schema from
 `packages/contracts` at the controller boundary, with unknown properties rejected rather than
@@ -898,7 +888,7 @@ authorization, validation, transactions and constraints together. This tier catc
 real defects in a CRUD-heavy application and is where the effort is concentrated.
 
 **End-to-end tests** cover a deliberately tiny set of journeys that must never break: register and
-log in, log a workout session with sets, log a meal, view progress. Every additional E2E test is a
+log in, log a workout session with sets, log a meal, and — after the MVP — view progress. Every additional E2E test is a
 recurring maintenance cost, so the suite is kept small on purpose and everything else is pushed
 down to integration tests.
 
@@ -928,15 +918,29 @@ Ordered so the fastest signal fails first:
 5. **Build** — production builds of `web` and `api`; a build failure that only appears in
    production configuration is a common and avoidable surprise.
 6. **Integration tests** — against a PostgreSQL service container with migrations applied.
-7. **E2E smoke** — Playwright against a preview deployment, on pull requests targeting `main`.
+7. **E2E smoke** — Playwright against the two applications started in the job, backed by a
+   PostgreSQL service container. Preview deployments are not needed at this size.
 
 `concurrency` with `cancel-in-progress` stops superseded runs on the same branch. Dependabot or
 Renovate keeps dependencies current, grouped to avoid a weekly flood of individual pull requests.
 
+The steps run sequentially in a single job rather than as separate jobs; the order above still
+holds. Integration tests use Testcontainers, which needs Docker: they run in CI and skip on a
+machine without it.
+
 ### Deployment
 
-`main` deploys automatically to staging. Production deploys are triggered by a tag, so the
-production release is an explicit, attributable action rather than a side effect of merging.
+During the MVP there is **one environment**, deployed from `main` after CI passes, on zero-cost
+tiers ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)):
+
+1. Run `prisma migrate deploy` against Neon from CI.
+2. Redeploy the API container on Koyeb.
+3. Deploy the web bundle, for each locale, plus the `/api/*` proxy Function to Cloudflare Pages.
+
+The deploy job skips itself until its secrets exist. A separate production environment, deployed
+from a tag so that a release is an explicit, attributable action, arrives in phase 10 together with
+paid hosting.
+
 Database migrations run as a separate step before the new application version starts, and
 migrations are written to be backward compatible with the previous release — otherwise a rollback
 becomes impossible precisely when it is needed.
@@ -947,15 +951,15 @@ becomes impossible precisely when it is needed.
 
 ### Frontend
 
-**Token handling** as described in [section 8](#8-authentication): access token in memory,
-refresh token in an `HttpOnly` cookie on web and OS secure storage on native. No token ever in
-`localStorage`.
+**Token handling** as described in [section 8](#8-authentication): on the web the session token
+lives only in an `HttpOnly` cookie, and the app never sees it. On native it lives in OS secure
+storage. No token is ever in `localStorage`.
 
 **XSS.** A strict Content Security Policy with no `unsafe-inline`. Angular's built-in
 contextual escaping is relied on, which means `innerHTML` binding and the
 `bypassSecurityTrust*` family are treated as requiring explicit justification in review. This is
-load-bearing rather than hygienic: the entire token strategy assumes injected script cannot read a
-refresh token.
+load-bearing rather than hygienic: an `HttpOnly` cookie stops injected script from stealing the
+session, but not from using it while the page is open.
 
 **Authorization display is not authorization.** Entitlement guards and conditional UI improve the
 experience and are trivially bypassed by editing client state. Every premium capability is checked
@@ -967,19 +971,22 @@ server-side on the endpoint that performs the work.
 assignment is prevented by parsing into an explicit schema rather than spreading a request body
 into a database call.
 
-**Authorization** in two layers: a guard establishes authentication, role and entitlements; the
+**Authorization** in two layers: a guard establishes authentication and role (plus entitlements
+from phase 9); the
 application layer enforces resource ownership inside the query predicate. Ownership is never
 checked by loading a row and comparing afterwards, because that pattern leaks existence through
 timing and is easy to forget on a new endpoint.
 
-**CORS** as an explicit origin allow-list — the web origins plus the Capacitor origins
-(`capacitor://localhost`, `https://localhost`). Note that Fastify v5 only allows safelisted methods
+**CORS** is not used by the web app, which shares an origin with the API through the Pages proxy.
+It stays configured as an explicit allow-list for the Capacitor origins (`capacitor://localhost`,
+`https://localhost`) and local development. Note that Fastify v5 only allows safelisted methods
 by default, so `PATCH`, `PUT` and `DELETE` must be enabled deliberately.
 
-**CSRF.** `SameSite=Strict` on the refresh cookie plus the fact that the API is
-token-authenticated and does not accept cookies for anything except the refresh endpoint. If a
-cookie-authenticated endpoint is ever added, double-submit token protection becomes mandatory at
-that moment.
+**CSRF.** In scope, because the web app authenticates with a cookie. The session cookie is
+`SameSite=Strict`, and every cookie-authenticated request that is not a `GET` must carry an `Origin`
+header on the allow-list, or it is rejected with `403`. Bearer-authenticated requests from native
+are not exposed to CSRF. If a web client on another origin is ever needed, double-submit tokens
+become mandatory at that moment.
 
 **Rate limiting** globally, and far more aggressively on authentication endpoints — login,
 registration, password reset — including per-account lockout with exponential backoff, since
@@ -1018,11 +1025,14 @@ observability stack installed before there is traffic mostly produces dashboards
 - **Structured logging** to stdout, JSON, with a request correlation identifier propagated from an
   inbound header and returned as `traceId` in error responses. This alone answers most "what
   happened to this request" questions.
-- **Error tracking** with Sentry on both the frontend and the API, with source maps uploaded in CI
-  and release tagging. This is the one tool worth having on day one, because an unreported frontend
+- **Error tracking** with Sentry's free plan on both the frontend and the API, with release tagging,
+  from the MVP milestone. This is the one tool worth having on day one, because an unreported frontend
   exception is invisible otherwise.
-- **Uptime check** on a `/health` endpoint that verifies database connectivity, not just process
-  liveness.
+- **Health endpoints**, two of them. A liveness path, used by the platform health check, touches
+  nothing. `/health` verifies database connectivity and is called manually, from CI after a
+  deploy, or by an infrequent uptime check. On the free tier, a frequent database-aware check keeps
+  Neon awake and exhausts its compute quota
+  ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)).
 - **Platform metrics** from the hosting provider: CPU, memory, response time, error rate.
 
 ### Production hardening
@@ -1131,10 +1141,36 @@ projects, so it is a constraint to respect rather than a migration to perform.
 
 ### Implementation status
 
-Phase 1 is in progress. `apps/api` currently contains only the minimum needed to verify the
-TypeScript 6 risk above: a bootstrap on Fastify with a global `api/v1` prefix and a `health`
-module with constructor injection. No domain modules, no database, no cross-cutting infrastructure
-yet — those are the remainder of phase 1 in [ROADMAP.md](./ROADMAP.md#phase-1--foundation).
+Phase 1 (foundation) is complete in code; what remains is operational. The authoritative checklist
+is in [ROADMAP.md](./ROADMAP.md#phase-1--foundation).
+
+Built:
+
+- `apps/api`: NestJS on Fastify with typed configuration, request correlation, the RFC 9457
+  exception filter, the Zod validation pipe, Helmet, CORS and throttling. The only module is
+  `health`, which pings PostgreSQL and reports `ok` or `degraded`.
+- `apps/web`: Angular 22, standalone and zoneless, with Tailwind and the CDK. A health page consumes
+  the shared contract through `httpResource`, and a problem+json interceptor maps errors.
+- `packages/contracts`: pagination, problem details and the health schema.
+- PostgreSQL 17 through Docker Compose and Prisma 6, with one throwaway `MigrationProbe` model that
+  proves the migration workflow. There is no domain schema yet.
+- Import boundaries enforced by ESLint and covered by tests in `tools/`.
+- The pull request pipeline described in [section 12](#12-cicd), and a deploy job written for
+  Railway.
+
+Pending before phase 2:
+
+- Moving the deploy job and the web app to the zero-cost setup of
+  [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md): the Pages proxy, migrations from CI and a
+  Koyeb redeploy.
+- The first live deploy.
+- Branch protection on `main` that requires the CI checks.
+
+Not started, by design: authentication, internationalisation, domain modules, Signal Forms usage,
+Sentry and Capacitor. Each belongs to a later phase.
+
+The scope of the MVP was reviewed on 2026-09-28. That review produced ADR-015 to ADR-018 and a
+leaner roadmap ([ROADMAP.md](./ROADMAP.md#scope-review-2026-09-28)).
 
 ### Open decisions
 
@@ -1151,42 +1187,43 @@ decision can be deferred without blocking the nutrition feature.
 
 **OPEN DECISION — Monetisation model.** Which capabilities are free and which are paid, and whether
 limits are feature-based or quota-based. _Needed to decide:_ product positioning and competitor
-analysis. _Consequence of deferring:_ the entitlement mechanism is built
-([ADR-009](./ADR/ADR-009-authorization-and-entitlements.md)) but the policies are not, which is the
-correct order — the mechanism is architecture, the policies are configuration.
+analysis. _Consequence of deferring:_ the entitlement mechanism is designed
+([ADR-009](./ADR/ADR-009-authorization-and-entitlements.md)) and built in phase 9, and the
+policies are decided before that phase. The mechanism is architecture; the policies are
+configuration.
 
 **OPEN DECISION — Health-data compliance posture.** Whether the product processes GDPR Article 9
 special-category data, and what that requires at launch: explicit consent flows, a data processing
 agreement, a retention schedule, possibly a data protection impact assessment. _Needed to decide:_
-legal advice specific to the target jurisdictions. This is not an engineering judgement.
+legal advice specific to the target jurisdictions. This is not an engineering judgement. _Interim
+posture for the closed beta:_ invited testers only, explicit consent recorded at registration
+with the privacy-notice version, data in an EU region, and real hard deletion. That reduces
+exposure; it does not replace the legal answer, which is needed before registration opens.
 
-**OPEN DECISION — Coach and sharing features.** If a trainer can view or write a client's data, the
-authorization model changes from "a resource has exactly one owner" to inter-user relationships
-with granted scopes. _Needed to decide:_ whether this is in the product vision at all. _Timing:_
-must be decided before phase 5, because retrofitting relationship-based authorization touches every
-endpoint.
+**CLOSED (2026-09-28) — Coach and sharing features.** Out of scope. Every resource has exactly one
+owner, and ownership is enforced in the query predicate. If coach access is wanted later, it means
+relationship-based authorization, which touches every endpoint. That cost was accepted knowingly
+rather than paid in advance.
 
 **OPEN DECISION — Wearable and health-platform integrations** (Apple Health, Google Fit, Garmin,
 Strava). These change ingestion: background synchronisation, deduplication against manual entries,
 and conflict rules. _Needed to decide:_ whether users are expected to arrive with existing data.
 _Timing:_ not before the core logging flows are validated.
 
-**OPEN DECISION — Internationalisation.** If the product launches in more than one language, the
-exercise and food catalogues need translatable names, which is a data-model concern rather than a
-UI concern. _Needed to decide:_ target markets. _Timing:_ before phase 4, since the exercise
-catalogue is built there.
+**CLOSED (2026-09-28) — Internationalisation.** The product launches in Spanish and English.
+UI strings use `@angular/localize`; global catalogue names live in translation tables; user-authored
+data is never translated ([ADR-018](./ADR/ADR-018-internationalisation.md)).
 
-**OPEN DECISION — Expected scale.** No user or volume estimate exists, so infrastructure sizing in
-[ADR-013](./ADR/ADR-013-hosting-and-deployment.md) is documented as reversible rather than
-definitive.
+**OPEN DECISION — Expected scale.** No user or volume estimate exists beyond a closed beta, which
+free tiers cover ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)). Sizing for paid hosting is
+decided when that ADR's reversal trigger fires.
 
-**OPEN DECISION — Documentation and UI language.** This documentation is written in English to
-match code identifiers and ADR convention; the product's user interface language is a separate
-product decision and is not settled here.
+**CLOSED (2026-09-28) — Documentation and UI language.** Documentation and code stay in English. The
+user interface is Spanish and English ([ADR-018](./ADR/ADR-018-internationalisation.md)).
 
 ### Deferred by design
 
 Recorded so they are recognised as postponed rather than forgotten: offline-first bidirectional
 synchronisation, a payments provider integration, an administrative back office, social features,
-AI-assisted training or nutrition recommendations, multi-language catalogues, and a public API for
+AI-assisted training or nutrition recommendations, locales beyond Spanish and English, and a public API for
 third parties. Each one is a phase in [docs/ROADMAP.md](./ROADMAP.md) or an explicit non-goal.

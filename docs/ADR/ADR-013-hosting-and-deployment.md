@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-23
 - Related: [ADR-002](./ADR-002-backend-framework.md), [ADR-004](./ADR-004-database-and-orm.md), [ADR-006](./ADR-006-monorepo-and-tooling.md)
+- Amended 2026-09-28: for the MVP, the API and database hosting are replaced by a zero-cost setup, see [ADR-015](./ADR-015-zero-cost-mvp-hosting.md)
 
 ## Context
 

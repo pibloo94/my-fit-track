@@ -6,7 +6,8 @@ statistics.
 
 > **Status: phase 1.** The architecture is documented and the first vertical slice is in place: the
 > API serves `/api/v1/health` (including a Postgres ping) and the Angular app consumes it through
-> `packages/contracts`. Local Postgres is Docker Compose; the API and web app run natively.
+> `packages/contracts`. Local Postgres is Docker Compose; the API and web app run natively. The MVP
+> is a closed beta in Spanish and English — see the [roadmap](docs/ROADMAP.md#mvp-scope).
 
 ## Documentation
 
@@ -19,23 +20,24 @@ statistics.
 Start with [ARCHITECTURE.md](docs/ARCHITECTURE.md). It links to the ADR for every decision it
 summarises.
 
-## Planned stack
+## Stack
 
-**Frontend** — Angular 22 (standalone, signals, zoneless), TypeScript, Tailwind CSS, Angular CDK,
-Signal Forms. Packaged for mobile with Capacitor.
+**Frontend** — Angular 22 (standalone, signals, zoneless), TypeScript, Tailwind CSS, Angular CDK.
+Spanish and English via `@angular/localize` and Signal Forms arrive in phase 2; Capacitor packaging
+in phase 10.
 
 **Backend** — NestJS 11 on Fastify, REST API, Prisma, PostgreSQL.
 
 **Shared** — a `contracts` package of Zod schemas that is the single definition of every request and
 response shape, used for validation on the server and type inference on the client.
 
-**Quality** — Vitest, Angular Testing Library, Testcontainers, Playwright, ESLint with enforced
-import boundaries, Prettier, GitHub Actions.
+**Quality** — Vitest, Testcontainers, Playwright, ESLint with enforced import boundaries, Prettier,
+GitHub Actions. Angular Testing Library is added with the first component that needs it.
 
 Each choice, including the ones rejected, is justified in
 [docs/ADR/](docs/ADR/README.md).
 
-## Planned repository layout
+## Repository layout
 
 ```
 apps/
@@ -74,24 +76,19 @@ npm run test:e2e
 The smoke test starts the API from `apps/api/dist` and the Angular dev server. Run `npm run build`
 first so the API exists.
 
-## Staging
+## Deployment
 
-Staging deploys from `main` after CI is green. The API is a Docker image on Railway (EU Postgres,
-migrations in the container entrypoint). The web app is the Angular production bundle on Cloudflare
-Pages, pointed at the API through `app-config.json`.
+The MVP runs as a closed beta on zero-cost tiers, as a single environment deployed from `main` after
+CI is green ([ADR-015](docs/ADR/ADR-015-zero-cost-mvp-hosting.md)):
 
-Create a GitHub Environment named `staging` and set:
+- **Web** — the Angular bundle on Cloudflare Pages, with a Pages Function forwarding `/api/*` to the
+  API, so the browser only ever talks to one origin.
+- **API** — the Docker image on Koyeb's free instance (Frankfurt).
+- **Database** — Neon's free Postgres (Frankfurt). Migrations run from CI before the API redeploys.
 
-| Secret                  | What it is                                                             |
-| ----------------------- | ---------------------------------------------------------------------- |
-| `RAILWAY_TOKEN`         | Railway project or account token                                       |
-| `RAILWAY_SERVICE`       | Optional. Railway service name. Defaults to `api`                      |
-| `CLOUDFLARE_API_TOKEN`  | Token with Pages deploy permission                                     |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                                  |
-| `STAGING_API_BASE_URL`  | Public API origin, no trailing slash (e.g. `https://….up.railway.app`) |
-
-On Railway, set `NODE_ENV=production`, `DATABASE_URL` (plugin), `CORS_ORIGINS` to the Pages origin,
-and `PORT` if the platform does not inject it. Without those GitHub secrets, the deploy job skips.
+> The CI deploy job still targets Railway, whose trial expired. Moving it to the setup above is the
+> next task in [phase 1](docs/ROADMAP.md#phase-1--foundation); the list of GitHub secrets is
+> documented here when that lands. Until the secrets exist, the deploy job skips.
 
 ```bash
 docker build -t my-fit-track-api --build-arg APP_VERSION=dev .

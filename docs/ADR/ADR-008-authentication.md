@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-23
 - Related: [ADR-009](./ADR-009-authorization-and-entitlements.md), [ADR-010](./ADR-010-mobile-and-offline-strategy.md)
+- Amended 2026-09-28: the token design (access JWT plus rotating refresh token) is superseded by opaque server-side sessions, see [ADR-016](./ADR-016-opaque-server-sessions.md). The remaining rules still apply
 
 ## Context
 

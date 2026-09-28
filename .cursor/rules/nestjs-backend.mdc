@@ -64,7 +64,13 @@ if (!session) throw new NotFoundException();
 - Errors are RFC 9457 `application/problem+json` from the global exception filter, with a stable
   machine-readable `code` and a `traceId`. Never throw a raw string.
 - Cursor pagination on unbounded collections. Offset only for small bounded lists.
-- Mutations honour `Idempotency-Key`.
+- Creation of anything the client may create offline takes a client-generated UUIDv7 `id` and inserts
+  with `ON CONFLICT DO NOTHING`, then reads by `(id, userId)`; not found means `409`. Updates set
+  absolute values. See `docs/ADR/ADR-017-client-generated-identifiers.md`.
+- Authentication is an opaque session looked up by token hash (`docs/ADR/ADR-016-opaque-server-sessions.md`).
+  Cookie-authenticated non-GET requests must pass the `Origin` check. Never add a JWT.
+- Catalogue names are returned in the resolved locale only. Error `title`/`detail` stay English;
+  clients translate by `code` (`docs/ADR/ADR-018-internationalisation.md`).
 - Filtering and sorting use per-endpoint allow-lists, never a generic query language over columns.
 
 ## Data access

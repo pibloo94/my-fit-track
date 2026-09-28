@@ -7,7 +7,7 @@ Phases are ordered by dependency, not by importance. No time estimates are given
 developer and no fixed deadline, estimates would be invented numbers that later get treated as
 commitments.
 
-Two rules govern the sequence:
+Three rules govern the sequence:
 
 **Each phase must leave the application in a deployable state.** A phase that ends with a
 half-migrated schema or a broken build has no value and cannot be validated.
@@ -15,15 +15,39 @@ half-migrated schema or a broken build has no value and cannot be validated.
 **The "do not build yet" list matters as much as the deliverables.** Scope creep in a solo project
 does not announce itself; it arrives as a reasonable-sounding addition to the phase in progress.
 
+**Phases 1 to 6 plus the MVP milestone are the MVP; everything after is a backlog.** Phases 7 to 10
+are ordered by what the architecture needs, but their contents get reprioritised by what beta
+testers actually ask for.
+
+### Scope review, 2026-09-28
+
+The plan was reviewed against what a closed-beta MVP actually needs. The changes, and the decision
+behind each one:
+
+| Change                                                                        | Where                                                               |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Zero-cost hosting (Koyeb, Neon, Cloudflare Pages) with a same-origin proxy    | [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)                   |
+| Opaque server-side sessions instead of JWT plus rotating refresh tokens       | [ADR-016](./ADR/ADR-016-opaque-server-sessions.md)                  |
+| Client-generated ids instead of a generic `Idempotency-Key` store             | [ADR-017](./ADR/ADR-017-client-generated-identifiers.md)            |
+| Spanish and English from phase 2                                              | [ADR-018](./ADR/ADR-018-internationalisation.md)                    |
+| Closed beta by invitation; email verification deferred                        | Phase 2                                                             |
+| Profile reduced to preferences and account deletion; goals deferred           | Phase 3                                                             |
+| Routines without a `RoutineDay` level; "repeat last session" promoted to MUST | Phase 5                                                             |
+| User-authored foods and quick-add only; external catalogue and recipes later  | Phase 6, phase 7                                                    |
+| Entitlement and subscription skeleton moved from phase 2 to phase 9           | Phase 9, [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md) |
+| Sentry moved from phase 10 to the MVP milestone                               | MVP milestone                                                       |
+| Coach and client sharing closed as out of scope: one owner per resource       | [ARCHITECTURE.md](./ARCHITECTURE.md#open-decisions)                 |
+
 ---
 
 ## Phase 1 — Foundation
 
 **Goal:** an empty but complete, deployable, verified pipeline. No product features.
 
-**Progress as of 2026-08-24.** Resume by adding the GitHub `staging` secrets and creating the
-Railway + Cloudflare projects so the deploy job actually ships. Docker Desktop is still needed to
-prove Testcontainers locally. Branch protection is still a GitHub UI click. Do not start phase 2.
+**Progress as of 2026-09-28.** The code is complete. The Railway trial expired before the first
+deploy, so hosting moved to a zero-cost setup ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)).
+Resume by implementing that change in CI and running the first real deploy. Do not start phase 2
+before the deploy has succeeded.
 
 Done:
 
@@ -46,18 +70,24 @@ Done:
   `degraded`). Prisma 6 is used because the API is CommonJS; Prisma 7's client is ESM-first and
   needs a driver adapter — a separate upgrade.
 - Playwright smoke: the health page renders a payload from the API. In CI it runs against the
-  two apps plus a Postgres service, not a preview deployment (that waits on staging).
+  two apps plus a Postgres service.
 - GitHub Actions pull request pipeline: typecheck, lint, format, unit tests, production build,
   Testcontainers integration, Playwright smoke. Dependabot grouped monthly updates.
-- API multi-stage Dockerfile; Railway `migrate deploy` then `node`. Web runtime `app-config.json`
-  for the API origin. Staging job on `main` deploys Cloudflare Pages + Railway when secrets exist.
+- API multi-stage Dockerfile. Web runtime `app-config.json` for the API origin.
 
 Not done yet:
 
-- Testcontainers integration test **proven on this machine** (the test is written and skips when
-  Docker is missing).
+- **Move the deploy to ADR-015:**
+  - Pages Function proxy in `apps/web/functions/` for `/api/*`, with `app-config.json` pointing at
+    the web app's own origin.
+  - Migrations run from CI against Neon instead of the container entrypoint.
+  - A Koyeb redeploy from CI replaces the Railway step; `railway.json` is removed.
+  - A liveness path that does not touch the database, for the Koyeb health check.
+  - README and secrets list updated.
+- The first live deploy, checked end to end through the Pages origin.
 - Branch protection requiring the CI checks.
-- Staging secrets and the first live Railway / Cloudflare deploy.
+- A green CI run confirmed on GitHub. The Testcontainers test runs there; it skips on a machine
+  without Docker.
 
 **Build:**
 
@@ -76,12 +106,13 @@ Not done yet:
   integration test. Playwright installed with one smoke test.
 - GitHub Actions pull request pipeline: typecheck, lint, unit tests, build, integration tests.
   Branch protection requiring these checks.
-- Deploy the empty applications to staging. A pipeline that has never deployed is not a pipeline.
+- Deploy the empty applications. A pipeline that has never deployed is not a pipeline.
 
 **Dependencies:** none.
 
 **Do not build yet:** authentication, any domain model beyond the throwaway Prisma model, UI
-components beyond what proves the build, Capacitor, the service worker, production environment.
+components beyond what proves the build, Capacitor, the service worker, a production environment
+separate from the single MVP deployment.
 
 **Risks:**
 
@@ -95,100 +126,111 @@ components beyond what proves the build, Capacitor, the service worker, producti
   system, which is also required by the Vitest builder.
 - Zoneless change detection can conflict with a dependency added later. Confirm early that the
   intended chart library works.
-- Temptation to skip the deploy step. If the pipeline is not proven now, every later phase inherits
-  an unknown.
+- Free-tier quotas: a health check that pings the database every few minutes keeps Neon awake and
+  exhausts its compute hours by mid-month ([ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md)).
 
 ---
 
-## Phase 2 — Authentication
+## Phase 2 — Accounts
 
-**Goal:** a user can register, verify their email, log in, stay logged in, and log out everywhere.
+**Goal:** an invited tester can register, log in, stay logged in, reset a forgotten password and log
+out — in Spanish or English.
 
 **Build:**
 
-- `users` and `auth` modules: registration, login, refresh with rotation and reuse detection, logout,
-  logout-all, password reset, email verification.
-- Argon2id password hashing. Aggressive rate limiting and per-account lockout on auth endpoints.
-  Enumeration-resistant responses.
-- Refresh token storage: hashed, server-side, with family identifiers.
-- Frontend: `core/auth` session service exposing read-only signals, HTTP interceptors for the bearer
-  token and single-flight refresh, functional route guards, login and registration pages.
-- `TokenStorage` port with the browser adapter. The native adapter is deferred to phase 10, but the
-  port exists now so that nothing is written against a concrete storage.
-- Transactional email adapter.
-- Authorization skeleton: `users.role`, the `subscriptions` table, the entitlement resolution
-  mechanism and the `@RequiresEntitlement` guard — all unused, no plans defined.
-- Integration tests covering every auth flow, including the replay-detection path.
+- **Internationalisation foundation** ([ADR-018](./ADR/ADR-018-internationalisation.md)):
+  `@angular/localize`, `es` and `en` builds with the build failing on missing translations, the root
+  locale redirect, per-locale SPA fallback on Pages, locale data for dates and numbers, error
+  messages chosen by problem `code`, and a locale-aware Zod error map. It is built first so that no
+  screen ever exists without translation markers.
+- `users` and `auth` modules with **opaque server-side sessions**
+  ([ADR-016](./ADR/ADR-016-opaque-server-sessions.md)): register, login, logout, logout-all,
+  `GET /auth/session`, password reset. Argon2id. Aggressive rate limiting and per-account lockout on
+  auth endpoints. Enumeration-resistant responses. `Origin` check on cookie-authenticated writes.
+- **Registration by invitation.** An `invitations` table holds single-use, expiring random codes,
+  each bound to one email address. Registering requires a code matching the email. Codes are created
+  with a CLI script (`npm run invite -- someone@example.com`); there is no admin UI. Binding the
+  invite to an email is what allows email verification to wait.
+- **Consent at registration.** An explicit checkbox for processing health-related data, stored with
+  a timestamp and the version of the privacy notice. A short privacy notice page in both languages.
+- `MailSender` port with one adapter on a free transactional-email tier, and a console adapter for
+  development and tests. The password-reset email is templated in both locales.
+- Frontend: `core/auth` exposing the current user as a read-only signal, a `401` handler that
+  routes to login, functional route guards, and login, registration and password-reset pages.
+- The first `shared/ui` primitives (button, text field, form field with error), used by at least two
+  of those pages.
+- Integration tests covering every auth flow, including revoked and expired sessions, a
+  disallowed `Origin`, a reused reset token, and an invite used twice or with a different email.
 
 **Dependencies:** phase 1.
 
-**Do not build yet:** social sign-in, MFA, plan definitions or paid features, admin interface,
-account deletion beyond a basic hard delete.
+**Do not build yet:** email verification, social sign-in, MFA, a device-list UI, roles beyond a
+`role` column, entitlements, subscriptions or plans (phase 9), an admin interface, open
+registration.
 
 **Risks:**
 
-- This is the highest-risk phase in the project. Self-hosted authentication is where solo projects
-  ship security defects ([ADR-008](./ADR/ADR-008-authentication.md)). Slow down here.
-- The refresh-rotation path is subtle: concurrent requests hitting an expired token must not
-  each trigger a rotation and invalidate each other. Single-flight refresh needs a test, not just
-  care.
-- Password reset tokens are a common weak point: single-use, short-lived, and invalidated on
-  password change.
-- Getting the token strategy wrong now is expensive to change once a mobile client exists.
+- This is still the highest-risk phase. Sessions remove the rotation logic, not the rest: password
+  reset tokens must be single-use, short-lived, stored hashed, and every session must be revoked when
+  a reset succeeds.
+- Argon2id on a 0.1 vCPU instance is slow. Measure login latency; do not weaken the parameters to
+  hide it.
+- CSRF is in scope because authentication uses a cookie. The `Origin` check needs a test that fails
+  without it.
+- i18n adds cost to every screen from now on. Resist shipping "English for now" strings.
 
 ---
 
-## Phase 3 — User profile
+## Phase 3 — Settings
 
-**Goal:** the application knows who the user is in domain terms.
+**Goal:** the application knows the preferences every later feature depends on, and a user can leave.
 
 **Build:**
 
-- Profile: display name, date of birth, sex, height, activity level.
-- Preferences: unit system (kg/lb), timezone, week start day, locale.
-- Goals: target weight, target date, objective (cut, maintain, bulk).
-- Settings UI, using the shared form patterns that later phases will copy.
-- GDPR groundwork: data export endpoint and hard account deletion.
-- The first real `shared/ui` components, extracted from actual use rather than designed upfront.
+- `UserPreferences`: timezone (detected from the browser at registration and editable), unit system
+  (kg or lb), locale (`es` or `en`).
+- Hard account deletion: domain data, sessions and invitations, irreversibly. A confirmation step
+  in the UI.
+- A settings page using the form pattern that later phases copy.
 
 **Dependencies:** phase 2.
 
-**Do not build yet:** avatars and file uploads, notification preferences, onboarding flow,
-integrations.
+**Do not build yet:** body goals (target weight, date, objective), data export (phase 7), avatars
+and file uploads, notification preferences, onboarding flow, integrations. The daily nutrition
+target lives in phase 6, next to the diary that uses it.
 
 **Risks:**
 
-- Timezone and unit preference are set here and consumed by every later feature. Getting the
-  conventions in [ADR-014](./ADR/ADR-014-domain-model-conventions.md) wrong now propagates
-  everywhere. Test the midnight boundary and the unit round trip explicitly.
+- Timezone and unit preference are consumed by every later feature. Getting the conventions in
+  [ADR-014](./ADR/ADR-014-domain-model-conventions.md) wrong now propagates everywhere. Test the
+  midnight boundary and the unit round trip explicitly.
 - Premature abstraction of `shared/ui`: build the second use before extracting the component.
 
 ---
 
 ## Phase 4 — Exercises
 
-**Goal:** a usable exercise catalogue, global plus user-authored.
+**Goal:** a usable exercise catalogue in both languages, global plus user-authored.
 
 **Build:**
 
-- `Exercise` model: name, primary and secondary muscle groups, equipment, modality, instructions.
-- Global catalogue seeded with a curated set. User-authored exercises with `owner_user_id`.
-- Search and filter by muscle group, equipment and name, with cursor pagination.
-- Exercise list and detail UI. First use of virtual scrolling if the list justifies it.
+- `Exercise` model: stable `key`, primary and secondary muscle groups, equipment and modality as
+  enum codes. Global names and instructions live in `exercise_translations` per locale; a
+  user-authored exercise has a single `name` ([ADR-018](./ADR/ADR-018-internationalisation.md)).
+- Global catalogue seeded with a curated set, in both `es` and `en`. User-authored exercises with
+  `owner_user_id`.
+- Search by name in the user's locale, filter by muscle group and equipment, with cursor pagination.
+- Exercise list and detail UI, plus a quick "create exercise" from the logging flow.
 
 **Dependencies:** phase 3.
 
 **Do not build yet:** exercise images or videos, community sharing of exercises, alternative and
-substitution suggestions, translations.
+substitution suggestions, locales beyond `es` and `en`.
 
 **Risks:**
 
-- **Internationalisation is decided implicitly here.** If exercise names need to be translatable,
-  that is a data-model concern, and retrofitting translations into a seeded catalogue with user
-  references is painful. This is an open decision in
-  [ARCHITECTURE.md](./ARCHITECTURE.md#open-decisions) that should be closed before this phase.
 - Seed data quality determines whether the product feels credible. A thin or wrong catalogue
-  undermines everything built on top of it.
+  undermines everything built on top of it, and every entry now needs two correct names.
 - Modelling exercise variants (barbell versus dumbbell, incline versus flat) as separate exercises
   or as attributes of one is a decision that affects progression tracking. Decide deliberately.
 
@@ -196,26 +238,34 @@ substitution suggestions, translations.
 
 ## Phase 5 — Workouts
 
-**Goal:** the core loop. A user can plan a routine, perform it, and log every set.
+**Goal:** the core loop. A user can plan a routine, perform it, and log every set without losing
+any of it.
 
 **Build:**
 
-- `Routine`, `RoutineDay`, `RoutineExercise` — the prescription side.
-- `WorkoutSession`, `SessionExercise`, `SetEntry` — the execution side, strictly separate.
+- `Routine` and `RoutineExercise` (target sets, rep range, rest, notes) — the prescription side. A
+  training "day" is simply another routine ("Push A", "Legs"). Grouping routines into a program is
+  deferred.
+- `WorkoutSession` (local `performed_on` date, `started_at`, `finished_at`, optional source routine),
+  `SessionExercise`, `SetEntry` (reps, `weight_kg`, RIR or RPE, `rest_seconds`, order) — the
+  execution side, strictly separate.
+- Start a session from a routine, from scratch, or by **repeating the last session**. The last one
+  is the most valuable convenience in the product, and cheap once sessions exist.
 - Live logging screen: designed for one-handed use, large touch targets, rest timer, previous
   performance visible while logging.
 - Session history with cursor pagination.
-- Domain logic: volume calculation, estimated one-rep-max, personal-record detection emitted as a
-  domain event.
-- `Idempotency-Key` support on every mutating endpoint this feature uses.
+- Domain logic: volume calculation and estimated one-rep-max.
+- **Client-generated UUIDv7 ids** on sessions, session exercises and set entries
+  ([ADR-017](./ADR/ADR-017-client-generated-identifiers.md)).
 - Local persistence of the in-progress session plus the outbox queue, with tests for its failure
   modes.
 - Thorough unit tests on the calculations and integration tests on the ownership filters.
 
 **Dependencies:** phase 4.
 
-**Do not build yet:** supersets and circuits, progression algorithms and auto-regulation, plan
-templates from other users, social sharing, full offline for anything other than the active session.
+**Do not build yet:** supersets and circuits, programs grouping routines, personal-record detection
+(phase 7), progression algorithms and auto-regulation, plan templates from other users, social
+sharing, full offline for anything other than the active session.
 
 **Risks:**
 
@@ -224,59 +274,87 @@ templates from other users, social sharing, full offline for anything other than
   while building it; collapsing it is unrecoverable once users have history
   ([ADR-014](./ADR/ADR-014-domain-model-conventions.md)).
 - The outbox is where silent data-loss bugs live. Test the ugly paths: retry after timeout,
-  duplicate suppression, logout with a pending queue, deleted parent session.
+  duplicate suppression by id, logout with a pending queue, deleted parent session.
 - The logging UI is the product's usability test. If it is slower than a notes app, nothing else
   matters.
-- **The coach and sharing open decision should be closed before this phase**, because
-  relationship-based authorization would change the ownership model that every endpoint here
-  assumes.
 
 ---
 
 ## Phase 6 — Nutrition
 
-**Goal:** a user can log what they eat and see it against a target.
+**Goal:** a user can log what they eat and see it against a daily target.
 
 **Build:**
 
-- `FoodCatalogueProvider` port with the first adapter. Local caching with recorded provenance.
-- User-authored foods, `FoodPortion` serving sizes.
-- `Recipe` and `RecipeIngredient`, with computed nutritional totals.
-- `DiaryEntry` with **snapshotted macros**, grouped by meal type and local calendar date.
-- `NutritionTarget` with effective date ranges, and a daily progress view.
-- Food search combining catalogue and user-authored foods.
+- User-authored `Food` with nutrients normalised per 100 g, and `FoodPortion` serving sizes
+  ("1 slice = 30 g").
+- **Quick add:** a diary entry with calories and macros typed directly and an optional label, with no
+  food behind it.
+- `DiaryEntry` with **snapshotted macros**, grouped by meal type and local calendar date, with
+  client-generated ids.
+- Recent and frequent foods, so that logging a food for the second time is two taps.
+- `NutritionTarget` (daily calories and macros) with effective date ranges, and a daily progress
+  view.
 
 **Dependencies:** phase 3. Independent of phases 4 and 5, so it could be resequenced.
 
-**Do not build yet:** barcode scanning (needs Capacitor, phase 10), meal plans, recipe import from
-URLs, photo recognition, water tracking, micronutrients beyond the main macros.
+**Do not build yet:** the external food catalogue and recipes (phase 7), barcode scanning (needs
+Capacitor, phase 10), meal plans, photo recognition, water tracking, micronutrients beyond the main
+macros.
 
 **Risks:**
 
-- **The food data licensing open decision is unresolved** ([ADR-011](./ADR/ADR-011-nutrition-data-source.md)).
-  Develop against the public-domain source so the codebase never contains an unresolved licence
-  exposure.
+- **Manual food entry is friction.** Recents and quick-add are the mitigation. Whether testers ask
+  for a catalogue first is the main question the beta answers about nutrition.
 - Snapshotting macros will feel redundant while building. It is not
   ([ADR-014](./ADR/ADR-014-domain-model-conventions.md)).
-- External provider data quality, rate limits and downtime all need handling. Cache aggressively.
-- Portion and unit maths is a quiet source of wrong numbers: grams versus servings versus millilitres
-  versus "one medium banana". Normalise on import and test the conversions.
+- Portion and unit maths is a quiet source of wrong numbers. Normalise on entry and test the
+  conversions.
 
 ---
 
-## Phase 7 — Progress
+## MVP milestone — closed beta
 
-**Goal:** the user can see that something is changing.
+**Goal:** put the MVP in front of invited testers, with a way to know whether it worked.
 
 **Build:**
 
-- `BodyMeasurement`: weight, body fat estimate, circumferences, with configurable measurement types.
-- `PersonalRecord` surfacing, derived from the events emitted in phase 5.
-- Charts: weight trend with a moving average, per-exercise progression, volume over time.
-- Habits: `HabitDefinition` and `HabitLog`, with streaks.
-- Progress overview page.
+- Body weight logging: a `BodyMeasurement` restricted to weight, with a list of recent entries.
+- A **Today** screen: macros against today's target, start a session (from a routine, or repeat the
+  last one), log today's weight.
+- Sentry on the web app and the API on the free plan, with release tagging. An unreported frontend
+  exception is invisible otherwise.
+- One Neon restore, actually performed and documented.
+- The privacy notice reviewed, and the first invitations sent.
+- A saved SQL query giving, per tester, the number of distinct days with a logged session or diary
+  entry. That number answers the MVP question.
 
-**Dependencies:** phases 5 and 6 for data to display.
+**Dependencies:** phases 5 and 6.
+
+**Do not build yet:** anything from phases 7 to 10, until testers have used the product for a couple
+of weeks.
+
+---
+
+## Phase 7 — Progress and catalogue
+
+**Goal:** the user can see that something is changing, and logging food takes less typing. This is
+the first post-MVP phase; its contents are reordered by beta feedback.
+
+**Build:**
+
+- `PersonalRecord` detection on set entries, emitted as a domain event, and surfaced in the UI.
+- Charts: weight trend with a moving average, per-exercise progression, volume over time.
+- `BodyMeasurement` beyond weight: body fat estimate, circumferences, configurable types.
+- Habits: `HabitDefinition` and `HabitLog`, with streaks.
+- Food catalogue: the `FoodCatalogueProvider` port with its first adapter, local caching with
+  recorded provenance ([ADR-011](./ADR/ADR-011-nutrition-data-source.md)). Catalogue names need a
+  locale answer ([ADR-018](./ADR/ADR-018-internationalisation.md)).
+- `Recipe` and `RecipeIngredient`, with computed nutritional totals.
+- Installable PWA with app-shell caching.
+- Data export.
+
+**Dependencies:** the MVP milestone.
 
 **Do not build yet:** progress photos (storage, and sensitive data), body composition scans,
 predictive projections, PDF or image export.
@@ -289,6 +367,9 @@ predictive projections, PDF or image export.
   then consider materialised views ([ADR-014](./ADR/ADR-014-domain-model-conventions.md)).
 - Raw daily weight is noisy and demotivating; a moving average is a product requirement, not a
   refinement.
+- **The food data licensing open decision is unresolved**
+  ([ADR-011](./ADR/ADR-011-nutrition-data-source.md)). USDA is licence-safe but English-only and
+  weak on European products. Resolve before choosing the adapter.
 
 ---
 
@@ -298,7 +379,7 @@ predictive projections, PDF or image export.
 
 **Build:**
 
-- Dashboard summary endpoint: today's targets, next planned session, recent records, streaks.
+- Richer Today and dashboard: next planned session, recent records, streaks.
 - Training analytics: volume per muscle group, frequency, intensity distribution, deload detection.
 - Nutrition analytics: adherence, macro distribution trends, correlation with weight change.
 - Composed read endpoints where the client would otherwise make many calls.
@@ -326,15 +407,18 @@ users.
 
 **Build:**
 
-- Plan definitions in typed configuration, mapped to the entitlements built in phase 2.
+- The authorization skeleton from [ADR-009](./ADR/ADR-009-authorization-and-entitlements.md): the
+  `subscriptions` table, per-user entitlement overrides, entitlement resolution and the
+  `@RequiresEntitlement` guard. Deferred from phase 2 because nothing used it; adding it is an
+  additive migration.
+- Plan definitions in typed configuration, mapped to those entitlements.
 - Quota enforcement where limits are quantitative.
 - Stripe integration: checkout, customer portal, webhook handler updating `subscriptions` only.
 - Upgrade and billing UI, plus honest gating on premium features.
-- Forced token refresh after a plan change so an upgrade takes effect immediately.
 
 **Dependencies:** phase 8, and a closed **monetisation open decision**
 ([ARCHITECTURE.md](./ARCHITECTURE.md#open-decisions)). Do not start without it — the mechanism is
-built, but the policies are a product decision.
+architecture, but the policies are a product decision.
 
 **Do not build yet:** multiple currencies, promotional codes, referral schemes, team or family
 plans, annual-versus-monthly complexity beyond two options.
@@ -359,19 +443,19 @@ plans, annual-versus-monthly complexity beyond two options.
 
 **Build:**
 
-- Capacitor wrapper for iOS and Android; native `TokenStorage` adapter; barcode scanning; store
-  listings and review submission.
-- PWA service worker for the app shell; installability.
-- Sentry on both applications with source maps and release tagging; uptime monitoring on a health
-  endpoint that checks database connectivity.
+- Paid, always-on hosting and a production environment separate from the beta, as the reversal
+  trigger in [ADR-015](./ADR/ADR-015-zero-cost-mvp-hosting.md) requires. A custom domain.
+- Capacitor wrapper for iOS and Android; the native `SessionTokenStorage` adapter; barcode scanning;
+  store listings and review submission.
+- Open registration with email verification, replacing invitations.
+- Sentry source maps; uptime monitoring on a health endpoint that checks database connectivity.
 - Application metrics and alerting on user-visible symptoms.
 - Load and performance validation, including Prisma connection pooling under concurrency.
 - Security review: dependency audit, CSP, headers, rate limits, a penetration-test pass over the
   auth flows.
 - GDPR completion: consent flows, privacy policy, retention schedule, verified export and erasure.
-- Backup restore actually tested.
 - Accessibility audit.
-- Production environment, runbook, and an incident checklist.
+- Runbook and an incident checklist.
 
 **Dependencies:** all previous phases.
 
@@ -379,9 +463,8 @@ plans, annual-versus-monthly complexity beyond two options.
 
 **Risks:**
 
-- **The native token storage path is only exercised now**, so authentication bugs that only occur on
-  mobile appear here. This is why the port exists from phase 2
-  ([ADR-008](./ADR/ADR-008-authentication.md)).
+- **The native session-token path is only exercised now**, so authentication bugs that only occur on
+  mobile appear here ([ADR-016](./ADR/ADR-016-opaque-server-sessions.md)).
 - App store review can reject on subscription handling, health-data disclosures or privacy labels.
   Budget for iteration.
 - Health-data compliance may require more than expected and is not an engineering decision. Resolve
@@ -396,31 +479,35 @@ plans, annual-versus-monthly complexity beyond two options.
 The MVP exists to answer one question: **will someone use this to log their training and food more
 than twice?** Everything that does not serve that question is deferred, however cheap it looks.
 
-Roughly, phases 1 through 6 with a thin slice of phase 7.
+The MVP is phases 1 to 6 plus the MVP milestone, delivered as a **closed beta**: the developer and
+invited testers, in Spanish and English, on zero-cost hosting.
 
 ### MUST HAVE — no product without these
 
-- Register, log in, stay logged in, log out.
-- Profile with units, timezone and goal.
+- Register with an invitation, log in, stay logged in, reset a password, log out.
+- Spanish and English throughout.
+- Preferences for units, timezone and language. Account deletion.
 - Exercise catalogue with search, plus user-authored exercises.
 - Create a routine.
 - **Log a workout session: exercises, sets, reps, weight, RIR/RPE, rest.** The core loop.
+- Repeat the last session as a starting point.
 - Session history.
-- Food search against the catalogue, plus user-authored foods.
+- User-authored foods, quick-add, and recent foods.
 - **Log meals with calories and macros against a daily target.** The other core loop.
 - Log body weight.
-- A dashboard that answers "what do I do today" and "where am I against today's targets".
+- A Today screen that answers "what do I do today" and "where am I against today's targets".
 - Resilient set logging: local persistence of the active session plus a retrying outbox. Losing a
   logged workout is the one failure the MVP cannot have.
+- Error tracking, so that testers' failures are visible without them reporting them.
 
-### SHOULD HAVE — strongly expected, ship soon after
+### SHOULD HAVE — first candidates after the beta
 
 - Personal-record detection and display.
 - Weight trend chart with a moving average.
 - Per-exercise progression chart.
+- Food catalogue search.
 - Recipes with computed totals.
 - Body measurements beyond weight.
-- Copy a previous session as a starting point — the highest-value convenience in the whole product.
 - Installable PWA.
 - Data export.
 
@@ -429,6 +516,7 @@ Roughly, phases 1 through 6 with a thin slice of phase 7.
 - Habit tracking with streaks.
 - Barcode scanning (requires the native build).
 - Supersets and circuits.
+- Programs grouping several routines.
 - Rest-timer notifications.
 - Training analytics: volume per muscle group, frequency, intensity distribution.
 - Dark mode.
@@ -439,14 +527,14 @@ Roughly, phases 1 through 6 with a thin slice of phase 7.
 
 - Full offline-first with bidirectional synchronisation.
 - Wearable and health-platform integrations.
-- Coach and client sharing.
+- Coach and client sharing (closed as out of scope on 2026-09-28).
 - Social features, feeds, following.
 - AI-generated training or nutrition recommendations.
 - Progression algorithms and auto-regulation.
 - Progress photos.
-- Multi-language catalogues.
+- Locales beyond Spanish and English.
 - A public API for third parties.
-- An administrative back office beyond the minimum.
+- An administrative back office beyond the invitation script.
 
 ### Deliberately excluded from the MVP, with reasons
 
@@ -457,6 +545,11 @@ These are the ones most likely to creep in, so the reason is recorded:
 - **AI recommendations.** Impressive in a demo, and unfalsifiable without a validated core loop.
 - **Full offline-first.** The expensive general solution to a problem that the scoped outbox already
   solves where it matters ([ADR-010](./ADR/ADR-010-mobile-and-offline-strategy.md)).
-- **Billing.** Charging before knowing what people value means charging for the wrong thing.
+- **Billing and the entitlement skeleton.** Charging before knowing what people value means charging
+  for the wrong thing, and a mechanism with no consumer is maintenance without benefit.
 - **Wearable integrations.** Each is a separate integration with its own deduplication rules, and
   none of them proves that the manual flow works.
+- **An external food catalogue.** It carries an unresolved licence question and a translation
+  problem. Whether testers need it before anything else is itself something the beta measures.
+- **Open registration.** It brings email verification, abuse handling and a fuller GDPR posture,
+  none of which a closed beta needs.

@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-23
 - Related: [ADR-008](./ADR-008-authentication.md), [ADR-003](./ADR-003-api-style.md)
+- Amended 2026-09-28: the model stands, but the entitlement and `subscriptions` skeleton is built in phase 9, not phase 2, see [ROADMAP.md](../ROADMAP.md#phase-9--premium). Ownership in the query predicate applies from phase 2
 
 ## Context
 
