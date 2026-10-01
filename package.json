@@ -31,11 +31,11 @@
   },
   "devDependencies": {
     "@my-fit-track/config": "*",
-    "@playwright/test": "^1.55.0",
-    "@types/node": "^24.0.0",
-    "eslint": "^10.9.0",
-    "prettier": "^3.9.6",
-    "typescript": ">=6.0 <6.1",
-    "vitest": "^4.1.11"
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.3",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
+    "typescript": ">=6.0 <7.1",
+    "vitest": "^5.0.2"
   }
 }
