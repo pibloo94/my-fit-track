@@ -10,13 +10,13 @@
     "test": "node scripts/ng.cjs test --watch=false"
   },
   "dependencies": {
-    "@angular/cdk": "~22.1.3",
-    "@angular/common": "~22.1.3",
-    "@angular/compiler": "~22.1.3",
-    "@angular/core": "~22.1.3",
-    "@angular/forms": "~22.1.3",
-    "@angular/platform-browser": "~22.1.3",
-    "@angular/router": "~22.1.3",
+    "@angular/cdk": "~22.2.0",
+    "@angular/common": "~22.2.0",
+    "@angular/compiler": "~22.2.0",
+    "@angular/core": "~22.2.0",
+    "@angular/forms": "~22.2.0",
+    "@angular/platform-browser": "~22.2.0",
+    "@angular/router": "~22.2.0",
     "@my-fit-track/contracts": "*"
   },
   "devDependencies": {
