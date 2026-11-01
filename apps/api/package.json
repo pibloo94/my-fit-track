@@ -15,15 +15,15 @@
     "prisma:migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
-    "@fastify/cors": "^11.3.0",
-    "@fastify/helmet": "^13.1.1",
+    "@fastify/cors": "^11.3.1",
+    "@fastify/helmet": "^13.2.0",
     "@my-fit-track/contracts": "*",
-    "@nestjs/common": "^11.2.1",
-    "@nestjs/core": "^11.2.1",
-    "@nestjs/platform-fastify": "^11.2.1",
-    "@nestjs/throttler": "^6.5.0",
-    "@prisma/client": "6.19.3",
-    "prisma": "6.19.3",
+    "@nestjs/common": "^12.3.2",
+    "@nestjs/core": "^12.3.2",
+    "@nestjs/platform-fastify": "^12.3.2",
+    "@nestjs/throttler": "^6.7.1",
+    "@prisma/client": "7.10.1",
+    "prisma": "7.10.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
